@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f766e" />
+  <meta name="description" content="Organizador completo de cuidado de mascotas. Vacunas, historial veterinario, gastos, recordatorios y más." />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="MascotaPro" />
+  
+  <title>MascotaPro v1.2 – Organizador de Mascotas</title>
+  
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="css/styles.css" />
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  
+  <!-- QR Code library (ligera) -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+</head>
+<body>
+  <!-- ============ PANTALLA DE LICENCIA ============ -->
+  <div id="license-screen" class="screen">
+    <div class="license-card">
+      <div class="logo">
+        <span class="logo-icon">🐾</span>
+        <h1>MascotaPro</h1>
+      </div>
+      <p class="subtitle">Organizador profesional de cuidado de mascotas</p>
+      
+      <div class="license-form">
+        <label for="license-key">Clave de licencia</label>
+        <input type="text" id="license-key" placeholder="PET-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" />
+        <p class="hint">Ingresá la clave que te enviamos después de tu compra</p>
+        <button id="btn-activate" class="btn btn-primary">Activar licencia</button>
+        <button id="btn-demo" class="btn btn-secondary" style="margin-top:10px;width:100%">Entrar en modo Demo</button>
+        <p id="license-error" class="error-msg hidden"></p>
+        <p class="hint" style="margin-top:12px;text-align:center">Claves de prueba: <strong>DEMO</strong> o <strong>PET-DEMO-2026-TEST</strong></p>
+      </div>
+      
+      <div class="license-footer">
+        <p>¿No tenés licencia? Contactanos</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ APP PRINCIPAL ============ -->
+  <div id="app" class="screen hidden">
+    <header class="app-header">
+      <div class="header-left">
+        <span class="logo-small">🐾</span>
+        <h1>MascotaPro</h1>
+      </div>
+      <div class="header-right">
+        <button id="btn-theme" class="icon-btn" title="Cambiar tema">🌙</button>
+        <button id="btn-notifications" class="icon-btn" title="Recordatorios">🔔</button>
+        <button id="btn-settings" class="icon-btn" title="Ajustes">⚙️</button>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <!-- HOME -->
+      <section id="view-home" class="view active">
+        <div class="section-header">
+          <h2>Mis Mascotas</h2>
+          <button id="btn-add-pet" class="btn btn-primary btn-sm">+ Agregar</button>
+        </div>
+        <div id="pets-list" class="pets-grid">
+          <div class="empty-state" id="empty-pets">
+            <div class="empty-icon">🐶</div>
+            <p>Todavía no tenés mascotas registradas</p>
+            <button class="btn btn-primary" onclick="document.getElementById('btn-add-pet').click()">Agregar mi primera mascota</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- DETALLE MASCOTA -->
+      <section id="view-pet" class="view">
+        <button class="back-btn" data-back="home">← Volver</button>
+        <div id="pet-detail-content"></div>
+      </section>
+
+      <!-- FORMULARIO MASCOTA -->
+      <section id="view-pet-form" class="view">
+        <button class="back-btn" data-back="home">← Cancelar</button>
+        <h2 id="form-title">Nueva mascota</h2>
+        <form id="pet-form" class="form">
+          <div class="form-group">
+            <label>Nombre *</label>
+            <input type="text" id="pet-name" required placeholder="Ej: Luna" />
+          </div>
+          <div class="form-group">
+            <label>Especie *</label>
+            <select id="pet-species" required>
+              <option value="">Seleccionar</option>
+              <option value="perro">Perro</option>
+              <option value="gato">Gato</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Raza</label>
+            <input type="text" id="pet-breed" placeholder="Ej: Labrador" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Fecha de nacimiento</label>
+              <input type="date" id="pet-birthday" />
+            </div>
+            <div class="form-group">
+              <label>Peso (kg)</label>
+              <input type="number" id="pet-weight" step="0.1" min="0" placeholder="0.0" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Microchip / ID</label>
+            <input type="text" id="pet-chip" placeholder="Número de microchip" />
+          </div>
+          <div class="form-group">
+            <label>Notas / Alergias</label>
+            <textarea id="pet-notes" rows="3" placeholder="Alergias, condiciones especiales..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Guardar mascota</button>
+        </form>
+      </section>
+
+      <!-- VACUNAS -->
+      <section id="view-vaccines" class="view">
+        <button class="back-btn" data-back="home">← Volver</button>
+        <div class="section-header">
+          <h2>Vacunas</h2>
+          <button id="btn-add-vaccine" class="btn btn-primary btn-sm">+ Agregar</button>
+        </div>
+        <div id="vaccines-list"></div>
+      </section>
+
+      <!-- FORMULARIO VACUNA -->
+      <section id="view-vaccine-form" class="view">
+        <button class="back-btn" data-back="vaccines">← Cancelar</button>
+        <h2>Nueva vacuna</h2>
+        <form id="vaccine-form" class="form">
+          <div class="form-group">
+            <label>Mascota *</label>
+            <select id="vaccine-pet" required></select>
+          </div>
+          <div class="form-group">
+            <label>Nombre de la vacuna *</label>
+            <input type="text" id="vaccine-name" required placeholder="Ej: Antirrábica, Quíntuple..." />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Fecha aplicada *</label>
+              <input type="date" id="vaccine-date" required />
+            </div>
+            <div class="form-group">
+              <label>Próxima dosis</label>
+              <input type="date" id="vaccine-next" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Veterinario / Clínica</label>
+            <input type="text" id="vaccine-vet" placeholder="Nombre de la clínica" />
+          </div>
+          <div class="form-group">
+            <label>Notas</label>
+            <textarea id="vaccine-notes" rows="2"></textarea>
+          </div>
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" id="vaccine-remind" checked />
+              Crear recordatorio para la próxima dosis
+            </label>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Guardar vacuna</button>
+        </form>
+      </section>
+
+      <!-- GASTOS -->
+      <section id="view-expenses" class="view">
+        <button class="back-btn" data-back="home">← Volver</button>
+        <div class="section-header">
+          <h2>Gastos</h2>
+          <button id="btn-add-expense" class="btn btn-primary btn-sm">+ Agregar</button>
+        </div>
+        <div id="expenses-summary" class="summary-card"></div>
+        <div id="expenses-list"></div>
+      </section>
+
+      <!-- FORMULARIO GASTO -->
+      <section id="view-expense-form" class="view">
+        <button class="back-btn" data-back="expenses">← Cancelar</button>
+        <h2>Nuevo gasto</h2>
+        <form id="expense-form" class="form">
+          <div class="form-group">
+            <label>Mascota</label>
+            <select id="expense-pet">
+              <option value="">Todas / General</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Descripción *</label>
+            <input type="text" id="expense-desc" required placeholder="Ej: Consulta veterinaria, alimento..." />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Monto (ARS) *</label>
+              <input type="number" id="expense-amount" required min="0" step="0.01" placeholder="0" />
+            </div>
+            <div class="form-group">
+              <label>Fecha *</label>
+              <input type="date" id="expense-date" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Categoría</label>
+            <select id="expense-category">
+              <option value="veterinario">Veterinario</option>
+              <option value="alimento">Alimento</option>
+              <option value="medicamento">Medicamento</option>
+              <option value="accesorio">Accesorio</option>
+              <option value="grooming">Peluquería / Grooming</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Guardar gasto</button>
+        </form>
+      </section>
+
+      <!-- RECORDATORIOS -->
+      <section id="view-reminders" class="view">
+        <button class="back-btn" data-back="home">← Volver</button>
+        <div class="section-header">
+          <h2>Recordatorios</h2>
+          <button id="btn-add-reminder" class="btn btn-primary btn-sm">+ Agregar</button>
+        </div>
+        <div id="reminders-list"></div>
+      </section>
+
+      <!-- FORMULARIO RECORDATORIO -->
+      <section id="view-reminder-form" class="view">
+        <button class="back-btn" data-back="reminders">← Cancelar</button>
+        <h2>Nuevo recordatorio</h2>
+        <form id="reminder-form" class="form">
+          <div class="form-group">
+            <label>Mascota</label>
+            <select id="reminder-pet">
+              <option value="">General</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Título *</label>
+            <input type="text" id="reminder-title" required placeholder="Ej: Dar antiparasitario" />
+          </div>
+          <div class="form-group">
+            <label>Fecha y hora *</label>
+            <input type="datetime-local" id="reminder-datetime" required />
+          </div>
+          <div class="form-group">
+            <label>Notas</label>
+            <textarea id="reminder-notes" rows="2"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Guardar recordatorio</button>
+        </form>
+      </section>
+
+      <!-- MASCOTA PERDIDA -->
+      <section id="view-lost" class="view">
+        <button class="back-btn" data-back="home">← Volver</button>
+        <h2>🚨 Mascota Perdida</h2>
+        <div class="lost-card">
+          <p>Generá un código QR para poner en el collar (impreso o con tag NFC). Cuando alguien lo escanee verá los datos de contacto y podrá reportar que la encontró.</p>
+          
+          <div class="form-group">
+            <label>Seleccioná la mascota</label>
+            <select id="lost-pet-select"></select>
+          </div>
+          
+          <div id="qr-container" class="qr-box">
+            <p class="muted">Seleccioná una mascota y tocá “Generar QR”</p>
+          </div>
+          
+          <button id="btn-generate-qr" class="btn btn-primary btn-block">Generar QR</button>
+          <button id="btn-share-lost" class="btn btn-secondary btn-block">Compartir enlace de reporte</button>
+          <p class="hint" style="margin-top:12px;text-align:center">
+            Tip: imprimí el QR o grabalo en un tag NFC barato (~$500-1500 ARS) y colgalo del collar.
+          </p>
+        </div>
+      </section>
+
+      <!-- AJUSTES -->
+      <section id="view-settings" class="view">
+        <button class="back-btn" data-back="home">← Volver</button>
+        <h2>Ajustes</h2>
+        <div class="settings-list">
+          <div class="setting-item">
+            <span>Licencia activa</span>
+            <span id="license-status" class="badge">—</span>
+          </div>
+          <div class="setting-item">
+            <span>Versión</span>
+            <span>1.1.0</span>
+          </div>
+          <div class="setting-item">
+            <span>Tema</span>
+            <button id="btn-toggle-theme" class="btn btn-sm btn-secondary">Cambiar</button>
+          </div>
+          <button id="btn-export-data" class="btn btn-secondary btn-block">Exportar mis datos (JSON)</button>
+          <button id="btn-import-data" class="btn btn-secondary btn-block">Importar datos</button>
+          <input type="file" id="import-file" accept=".json" class="hidden" />
+          <button id="btn-clear-data" class="btn btn-danger btn-block">Borrar todos los datos</button>
+          <button id="btn-logout" class="btn btn-outline btn-block">Cerrar sesión / Cambiar licencia</button>
+        </div>
+
+        <!-- Generador de claves (solo visible si querés usarlo vos) -->
+        <div class="admin-box" style="margin-top:24px">
+          <h3 style="font-size:15px;margin-bottom:10px">🔑 Generador de claves (para vos)</h3>
+          <p class="hint">Usá esto para crear claves y mandárselas a tus clientes.</p>
+          <button id="btn-gen-key" class="btn btn-primary btn-block">Generar nueva clave</button>
+          <div id="generated-keys" style="margin-top:12px"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-view="home">
+        <span class="nav-icon">🏠</span>
+        <span>Inicio</span>
+      </button>
+      <button class="nav-item" data-view="vaccines">
+        <span class="nav-icon">💉</span>
+        <span>Vacunas</span>
+      </button>
+      <button class="nav-item" data-view="expenses">
+        <span class="nav-icon">💰</span>
+        <span>Gastos</span>
+      </button>
+      <button class="nav-item" data-view="reminders">
+        <span class="nav-icon">🔔</span>
+        <span>Avisos</span>
+      </button>
+      <button class="nav-item" data-view="lost">
+        <span class="nav-icon">🔍</span>
+        <span>Perdida</span>
+      </button>
+    </nav>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="js/license.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/sw-register.js"></script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+{
+  "name": "MascotaPro – Organizador de Mascotas",
+  "short_name": "MascotaPro",
+  "description": "Organizador completo de cuidado de mascotas: vacunas, historial veterinario, gastos, recordatorios y más.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f766e",
+  "theme_color": "#0f766e",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["lifestyle", "health", "utilities"],
+  "lang": "es-AR",
+  "dir": "ltr"
+}

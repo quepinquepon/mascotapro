@@ -1,0 +1,665 @@
+/* ========================================
+   MascotaPro - Estilos principales
+   ======================================== */
+
+:root {
+  --primary: #0f766e;
+  --primary-dark: #0d5f59;
+  --primary-light: #14b8a6;
+  --bg: #f8fafc;
+  --bg-card: #ffffff;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --danger: #dc2626;
+  --success: #16a34a;
+  --warning: #d97706;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 4px 20px rgba(0,0,0,0.08);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ========== SCREENS ========== */
+.screen {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ========== LICENSE SCREEN ========== */
+#license-screen {
+  background: linear-gradient(160deg, #0f766e 0%, #134e4a 100%);
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+}
+
+.license-card {
+  background: white;
+  border-radius: 24px;
+  padding: 36px 28px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+  text-align: center;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.logo-icon {
+  font-size: 36px;
+}
+
+.logo h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.subtitle {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-bottom: 28px;
+}
+
+.license-form {
+  text-align: left;
+}
+
+.license-form label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+
+.license-form input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  font-size: 16px;
+  font-family: monospace;
+  letter-spacing: 1px;
+  transition: border-color 0.2s;
+}
+
+.license-form input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 8px 0 20px;
+}
+
+.license-footer {
+  margin-top: 24px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.license-footer a {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.error-msg {
+  color: var(--danger);
+  font-size: 13px;
+  margin-top: 12px;
+  text-align: center;
+}
+
+/* ========== BUTTONS ========== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-primary:hover, .btn-primary:active {
+  background: var(--primary-dark);
+}
+
+.btn-secondary {
+  background: #e2e8f0;
+  color: var(--text);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 2px solid var(--border);
+  color: var(--text);
+}
+
+.btn-danger {
+  background: #fef2f2;
+  color: var(--danger);
+}
+
+.btn-sm {
+  padding: 8px 14px;
+  font-size: 13px;
+}
+
+.btn-block {
+  width: 100%;
+  margin-top: 8px;
+}
+
+/* ========== APP HEADER ========== */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: white;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-small {
+  font-size: 22px;
+}
+
+.header-left h1 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.header-right {
+  display: flex;
+  gap: 4px;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 10px;
+}
+
+.icon-btn:active {
+  background: #f1f5f9;
+}
+
+/* ========== MAIN ========== */
+#main-content {
+  flex: 1;
+  padding: 16px;
+  padding-bottom: calc(80px + var(--safe-bottom));
+  overflow-y: auto;
+}
+
+.view {
+  display: none;
+}
+
+.view.active {
+  display: block;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.section-header h2 {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+/* ========== PETS GRID ========== */
+.pets-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.pet-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.pet-card:active {
+  transform: scale(0.98);
+}
+
+.pet-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #99f6e4, #5eead4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.pet-info h3 {
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.pet-info p {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--text-muted);
+}
+
+.empty-icon {
+  font-size: 56px;
+  margin-bottom: 12px;
+}
+
+.empty-state p {
+  margin-bottom: 20px;
+}
+
+/* ========== FORMS ========== */
+.form {
+  background: white;
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 15px;
+  font-family: inherit;
+  background: #f8fafc;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: white;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* ========== SUMMARY CARD ========== */
+.summary-card {
+  background: linear-gradient(135deg, #0f766e, #14b8a6);
+  color: white;
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.summary-card .amount {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.summary-card .label {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+/* ========== LIST ITEMS ========== */
+.list-item {
+  background: white;
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+.list-item .title {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.list-item .meta {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ========== LOST PET ========== */
+.lost-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+.lost-card p {
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.qr-box {
+  background: #f1f5f9;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  margin: 16px 0;
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.muted {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+/* ========== SETTINGS ========== */
+.settings-list {
+  background: white;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 15px;
+}
+
+.badge {
+  background: #dcfce7;
+  color: #166534;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+/* ========== BOTTOM NAV ========== */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 0 calc(8px + var(--safe-bottom));
+  z-index: 100;
+}
+
+.nav-item {
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-family: inherit;
+}
+
+.nav-item.active {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.nav-icon {
+  font-size: 22px;
+}
+
+/* ========== TOAST ========== */
+.toast {
+  position: fixed;
+  bottom: calc(90px + var(--safe-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  background: #0f172a;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 30px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 200;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  transition: opacity 0.3s;
+}
+
+.toast.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ========== RESPONSIVE ========== */
+@media (min-width: 500px) {
+  .pets-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  #main-content {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+}
+
+/* ========== DARK MODE ========== */
+body.dark {
+  --bg: #0f172a;
+  --bg-card: #1e293b;
+  --text: #f1f5f9;
+  --text-muted: #94a3b8;
+  --border: #334155;
+  --shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+body.dark .app-header,
+body.dark .bottom-nav,
+body.dark .form,
+body.dark .pet-card,
+body.dark .list-item,
+body.dark .settings-list,
+body.dark .lost-card {
+  background: var(--bg-card);
+}
+
+body.dark .license-card {
+  background: #1e293b;
+  color: #f1f5f9;
+}
+
+body.dark .form-group input,
+body.dark .form-group select,
+body.dark .form-group textarea {
+  background: #0f172a;
+  color: #f1f5f9;
+  border-color: #334155;
+}
+
+body.dark .btn-secondary {
+  background: #334155;
+  color: #f1f5f9;
+}
+
+body.dark .qr-box {
+  background: #0f172a;
+}
+
+/* ========== NUEVOS ESTILOS ========== */
+.stats-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.stat-box {
+  background: var(--bg-card);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+.stat-num {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+}
+
+.list-item.done {
+  opacity: 0.6;
+}
+
+.list-item.overdue {
+  border-left: 3px solid var(--danger);
+}
+
+.admin-box {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+
+.admin-box .list-item {
+  cursor: pointer;
+  margin-bottom: 6px;
+}
+
+#qr-canvas {
+  max-width: 100%;
+  border-radius: 8px;
+}
