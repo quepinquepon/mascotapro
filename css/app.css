@@ -1,34 +1,80 @@
-/* Barra de navegación inferior fija para móviles */
-.app-nav, nav.bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
+:root {
+    --primary: #10b981;
+    --primary-dark: #059669;
+    --secondary: #1e293b;
+    --bg-app: #f1f5f9;
+    --card-bg: #ffffff;
+    --text-main: #334155;
+    --border-color: #e2e8f0;
+    --radius-lg: 16px;
+    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+* {
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    background-color: var(--bg-app);
+    color: var(--text-main);
+    margin: 0;
+    padding: 0;
+}
+
+.card {
     background: var(--card-bg);
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    padding: 0.75rem 0;
-    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05);
-    border-top: 1px solid var(--border-color);
-    z-index: 1000;
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
 }
 
-.app-nav a, nav.bottom-nav button {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    font-size: 0.75rem;
+h2 {
+    font-size: 1.25rem;
+    color: var(--secondary);
+    margin-bottom: 1rem;
     font-weight: 600;
-    text-decoration: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    cursor: pointer;
-    transition: color 0.2s;
 }
 
-.app-nav a.active, .app-nav a:hover, nav.bottom-nav button:hover {
-    color: var(--primary);
+.form-group {
+    margin-bottom: 1rem;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--secondary);
+}
+
+input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    outline: none;
+}
+
+input:focus {
+    border-color: var(--primary);
+}
+
+button {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.2s;
+}
+
+button:hover {
+    background-color: var(--primary-dark);
 }
