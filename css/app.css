@@ -1,0 +1,34 @@
+/* Barra de navegación inferior fija para móviles */
+.app-nav, nav.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: var(--card-bg);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0.75rem 0;
+    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05);
+    border-top: 1px solid var(--border-color);
+    z-index: 1000;
+}
+
+.app-nav a, nav.bottom-nav button {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.app-nav a.active, .app-nav a:hover, nav.bottom-nav button:hover {
+    color: var(--primary);
+}
