@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MascotaPro - Gestión y Seguridad</title>
+    <title>MascotaPro - Gestión, Salud y Seguridad</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/app.css">
     <!-- Librería para generar la imagen del QR -->
@@ -33,7 +33,7 @@
     <div id="vista-app" style="max-width: 600px; margin: 0 auto; padding: 20px;">
         <header style="text-align: center; margin-bottom: 2rem;">
             <h1 style="color: #059669;">🐾 MascotaPro</h1>
-            <p style="color: #64748b;">Sistema de Gestión y Seguridad con QR</p>
+            <p style="color: #64748b;">Gestión Integral de Salud y Seguridad con QR</p>
         </header>
 
         <!-- 1. Formulario para registrar nueva mascota -->
@@ -44,18 +44,18 @@
                 <input type="text" id="input-nombre" placeholder="Ej: Luna">
             </div>
             <div class="form-group">
-                <label>Teléfono del dueño (para llamadas de emergencia):</label>
+                <label>Teléfono del dueño (para emergencias):</label>
                 <input type="tel" id="input-telefono" placeholder="Ej: 5493584000000">
             </div>
             <button onclick="guardarMascota()">Guardar Mascota</button>
         </section>
 
-        <!-- 2. Sección para seleccionar mascota y generar QR -->
+        <!-- 2. Sección para seleccionar mascota y ver su QR -->
         <section class="card">
             <h2>Generar QR para el Collar</h2>
             <div class="form-group">
                 <label>Seleccioná la mascota:</label>
-                <select id="select-mascotas" onchange="actualizarInfoQR()">
+                <select id="select-mascotas" onchange="actualizarInfoApp()">
                     <option value="">-- Seleccionar --</option>
                 </select>
             </div>
@@ -66,10 +66,34 @@
                 </div>
             </div>
         </section>
+
+        <!-- 3. Sección de Control de Vacunas y Salud -->
+        <section class="card" id="seccion-salud" style="display: none;">
+            <h2>Historial de Vacunas y Salud de <span id="nombre-mascota-actual"></span></h2>
+            
+            <div class="form-group">
+                <label>Registrar Vacuna o Tratamiento:</label>
+                <input type="text" id="input-vacuna" placeholder="Ej: Antirrábica / Desparasitación">
+            </div>
+            <div class="form-group">
+                <label>Fecha:</label>
+                <input type="date" id="input-fecha">
+            </div>
+            <button onclick="agregarVacuna()">Agregar al Historial</button>
+
+            <div style="margin-top: 20px;">
+                <h3>Vacunas Registradas:</h3>
+                <ul id="lista-vacunas" style="padding-left: 20px; color: #475569;">
+                    <li>No hay vacunas registradas todavía.</li>
+                </ul>
+            </div>
+        </section>
     </div>
 
     <!-- LÓGICA DE LA APLICACIÓN -->
     <script>
+        let mascotaSeleccionadaIndex = null;
+
         document.addEventListener("DOMContentLoaded", () => {
             const urlParams = new URLSearchParams(window.location.search);
             const lostId = urlParams.get("lost");
@@ -99,12 +123,10 @@
             cargarListaMascotas();
         });
 
-        // Obtener mascotas desde el almacenamiento del navegador (localStorage)
         function obtenerMascotas() {
             return JSON.parse(localStorage.getItem("mascotas_pro")) || [];
         }
 
-        // Guardar nueva mascota
         function guardarMascota() {
             const nombre = document.getElementById("input-nombre").value.trim();
             const telefono = document.getElementById("input-telefono").value.trim();
@@ -118,20 +140,19 @@
             const nuevaMascota = {
                 id: Math.random().toString(36).substring(2, 9),
                 nombre: nombre,
-                telefono: telefono.replace(/\D/g, '')
+                telefono: telefono.replace(/\D/g, ''),
+                vacunas: [] // Array para guardar las vacunas de esta mascota
             };
 
             mascotas.push(nuevaMascota);
             localStorage.setItem("mascotas_pro", JSON.stringify(mascotas));
 
-            // Limpiamos inputs y recargamos lista
             document.getElementById("input-nombre").value = "";
             document.getElementById("input-telefono").value = "";
             cargarListaMascotas();
             alert("¡Mascota guardada con éxito!");
         }
 
-        // Cargar las opciones en el menú desplegable (select)
         function cargarListaMascotas() {
             const select = document.getElementById("select-mascotas");
             const mascotas = obtenerMascotas();
@@ -146,29 +167,77 @@
             });
         }
 
-        // Generar y mostrar el QR de la mascota seleccionada
-        function actualizarInfoQR() {
+        function actualizarInfoApp() {
             const index = document.getElementById("select-mascotas").value;
+            mascotaSeleccionadaIndex = index;
             const contenedorQR = document.getElementById("contenedor-qr");
+            const seccionSalud = document.getElementById("seccion-salud");
 
             if (index === "") {
                 contenedorQR.innerHTML = '<p style="color: #94a3b8; margin: 20px;">Seleccioná una mascota para ver su QR</p>';
+                seccionSalud.style.display = "none";
                 return;
             }
 
             const mascotas = obtenerMascotas();
             const m = mascotas[index];
 
+            // Mostrar sección de salud
+            seccionSalud.style.display = "block";
+            document.getElementById("nombre-mascota-actual").innerText = m.nombre;
+            mostrarVacunas(m.vacunas);
+
+            // Generar QR
             const baseUrl = window.location.origin + window.location.pathname;
             const enlaceFinal = `${baseUrl}?lost=${m.id}&name=${encodeURIComponent(m.nombre)}&phone=${m.telefono}`;
 
-            // Limpiamos el contenedor y dibujamos el código QR en imagen
             contenedorQR.innerHTML = "";
             const canvas = document.createElement("canvas");
             contenedorQR.appendChild(canvas);
 
             QRCode.toCanvas(canvas, enlaceFinal, { width: 180, margin: 1 }, function (error) {
                 if (error) console.error(error);
+            });
+        }
+
+        function agregarVacuna() {
+            if (mascotaSeleccionadaIndex === null) return;
+
+            const vacunaTexto = document.getElementById("input-vacuna").value.trim();
+            const fechaTexto = document.getElementById("input-fecha").value;
+
+            if (!vacunaTexto || !fechaTexto) {
+                alert("Ingresá el nombre de la vacuna y la fecha.");
+                return;
+            }
+
+            const mascotas = obtenerMascotas();
+            mascotas[mascotaSeleccionadaIndex].vacunas.push({
+                nombre: vacunaTexto,
+                fecha: fechaTexto
+            });
+
+            localStorage.setItem("mascotas_pro", JSON.stringify(mascotas));
+
+            document.getElementById("input-vacuna").value = "";
+            document.getElementById("input-fecha").value = "";
+            
+            mostrarVacunas(mascotas[mascotaSeleccionadaIndex].vacunas);
+        }
+
+        function mostrarVacunas(vacunas) {
+            const lista = document.getElementById("lista-vacunas");
+            lista.innerHTML = "";
+
+            if (!vacunas || vacunas.length === 0) {
+                lista.innerHTML = "<li>No hay vacunas registradas todavía.</li>";
+                return;
+            }
+
+            vacunas.forEach(v => {
+                const li = document.createElement("li");
+                li.textContent = `${v.nombre} - Fecha: ${v.fecha}`;
+                lista.appendChild(li);
             });
         }
     </script>
