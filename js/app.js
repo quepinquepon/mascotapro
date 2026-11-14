@@ -607,3 +607,38 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
     }
 });
+// --- CÓDIGO PARA MASCOTA PERDIDA Y QR ---
+document.addEventListener("DOMContentLoaded", () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const lostId = urlParams.get("lost");
+    const petName = urlParams.get("name");
+    const ownerPhone = urlParams.get("phone");
+
+    if (lostId && petName) {
+        const phoneClean = ownerPhone ? ownerPhone.replace(/\D/g, '') : '';
+
+        document.body.innerHTML = `
+            <div style="font-family: 'Poppins', sans-serif; background: #fef2f2; color: #991b1b; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center;">
+                <div style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 400px; width: 100%; border: 2px solid #fecaca;">
+                    <span style="font-size: 3rem;">🚨</span>
+                    <h1 style="margin: 15px 0 5px; color: #7f1d1d; font-size: 1.8rem;">¡Encontraste a ${decodeURIComponent(petName).toUpperCase()}!</h1>
+                    <p style="color: #6b7280; font-size: 0.95rem; margin-bottom: 25px;">Esta mascota está perdida. Por favor, comunícate de inmediato con su dueño.</p>
+                    
+                    ${phoneClean ? `
+                        <a href="tel:${phoneClean}" style="display: block; background: #10b981; color: white; text-decoration: none; padding: 15px; border-radius: 12px; font-weight: bold; font-size: 1.1rem; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(16,185,129,0.3);">
+                            📞 Llamar al Dueño
+                        </a>
+                        
+                        <a href="https://wa.me/${phoneClean}?text=¡Hola! Encontré a ${petName} y quiero avisarte que está conmigo." target="_blank" style="display: block; background: #25d366; color: white; text-decoration: none; padding: 15px; border-radius: 12px; font-weight: bold; font-size: 1.1rem;">
+                            💬 Enviar WhatsApp
+                        </a>
+                    ` : `
+                        <p style="color: #ef4444; font-weight: bold;">No se configuró un teléfono de contacto para esta mascota.</p>
+                    `}
+                </div>
+                <p style="margin-top: 20px; font-size: 0.8rem; color: #9ca3af;">Protegido por MascotaPro</p>
+            </div>
+        `;
+        return;
+    }
+});
