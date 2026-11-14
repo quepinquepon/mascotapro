@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MascotaPro - Gestión, Salud y Seguridad</title>
+    <title>MascotaPro - Gestión, Salud y Seguridad con QR</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/app.css">
-    <!-- Librería para generar la imagen del QR -->
+    <!-- Librería gratuita para generar la imagen del código QR -->
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 </head>
 <body>
 
-    <!-- VISTA DE EMERGENCIA (Se muestra si alguien escanea un QR en la calle) -->
+    <!-- VISTA DE EMERGENCIA (Se activa automáticamente si alguien escanea el QR en la calle) -->
     <div id="vista-emergencia" style="display: none; min-height: 100vh; background: #fef2f2; color: #991b1b; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center;">
         <div style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 400px; width: 100%; border: 2px solid #fecaca;">
             <span style="font-size: 3rem;">🚨</span>
@@ -33,7 +33,7 @@
     <div id="vista-app" style="max-width: 600px; margin: 0 auto; padding: 20px;">
         <header style="text-align: center; margin-bottom: 2rem;">
             <h1 style="color: #059669;">🐾 MascotaPro</h1>
-            <p style="color: #64748b;">Gestión Integral de Salud y Seguridad con QR</p>
+            <p style="color: #64748b;">Gestión Integral, Salud y Seguridad con QR</p>
         </header>
 
         <!-- 1. Formulario para registrar nueva mascota -->
@@ -44,13 +44,13 @@
                 <input type="text" id="input-nombre" placeholder="Ej: Luna">
             </div>
             <div class="form-group">
-                <label>Teléfono del dueño (para emergencias):</label>
+                <label>Teléfono del dueño (para llamadas de emergencia):</label>
                 <input type="tel" id="input-telefono" placeholder="Ej: 5493584000000">
             </div>
             <button onclick="guardarMascota()">Guardar Mascota</button>
         </section>
 
-        <!-- 2. Sección para seleccionar mascota y ver su QR -->
+        <!-- 2. Sección para seleccionar mascota y generar su QR -->
         <section class="card">
             <h2>Generar QR para el Collar</h2>
             <div class="form-group">
@@ -69,7 +69,7 @@
 
         <!-- 3. Sección de Control de Vacunas y Salud -->
         <section class="card" id="seccion-salud" style="display: none;">
-            <h2>Historial de Vacunas y Salud de <span id="nombre-mascota-actual"></span></h2>
+            <h2>Historial de Vacunas de <span id="nombre-mascota-actual"></span></h2>
             
             <div class="form-group">
                 <label>Registrar Vacuna o Tratamiento:</label>
@@ -141,7 +141,7 @@
                 id: Math.random().toString(36).substring(2, 9),
                 nombre: nombre,
                 telefono: telefono.replace(/\D/g, ''),
-                vacunas: [] // Array para guardar las vacunas de esta mascota
+                vacunas: []
             };
 
             mascotas.push(nuevaMascota);
@@ -182,12 +182,12 @@
             const mascotas = obtenerMascotas();
             const m = mascotas[index];
 
-            // Mostrar sección de salud
+            // Mostrar sección de salud y vacunas
             seccionSalud.style.display = "block";
             document.getElementById("nombre-mascota-actual").innerText = m.nombre;
             mostrarVacunas(m.vacunas);
 
-            // Generar QR
+            // Generar QR visual apuntando al enlace con los datos del dueño
             const baseUrl = window.location.origin + window.location.pathname;
             const enlaceFinal = `${baseUrl}?lost=${m.id}&name=${encodeURIComponent(m.nombre)}&phone=${m.telefono}`;
 
