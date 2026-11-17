@@ -72,7 +72,7 @@
        CONFIGURACIÓN COMERCIAL Y ACTUALIZACIÓN REMOTA (100% GRATUITA)
        ===================================================================== -->
   <script>
-    const APP_VERSION = "2.3.1"; // Incrementá este número cada vez que subas mejoras a GitHub
+    const APP_VERSION = "2.3.2"; // Incrementá este número cada vez que subas mejoras a GitHub
 
     const COMMERCIAL_CONFIG = {
       appName: "MascotaPro",
@@ -84,8 +84,8 @@
       // Opcional: URL gratuita de un archivo JSON en tu GitHub (raw.githubusercontent.com)
       // para cambiar precios, alias o códigos en todas las apps sin tocar el HTML
       remoteConfigUrl: "",
-      supabaseUrl: "",      // https://TU-PROYECTO.supabase.co (pasos en supabase/LEEME.md)
-      supabaseAnonKey: "",  // clave "anon" pública del proyecto
+      supabaseUrl: "https://shftrcjmjxvampdahuck.supabase.co",      // https://TU-PROYECTO.supabase.co (pasos en supabase/LEEME.md)
+      supabaseAnonKey: "sb_publishable_jf5p1wMZCBSofo01U8aYlw_7ZLmvpAD",  // clave "anon" pública del proyecto
       licenseSecretSalt: "MASCOTAPRO_RIO4_2026_SECURE", // solo identifica dispositivos; no es un secreto
     };
   </script>
@@ -866,7 +866,7 @@
       const k = COMMERCIAL_CONFIG.supabaseAnonKey;
       const res = await fetch(`${COMMERCIAL_CONFIG.supabaseUrl}/functions/v1/redeem-code`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "apikey": k, "Authorization": "Bearer " + k },
+        headers: { "Content-Type": "application/json", "apikey": k },
         body: JSON.stringify({ code, device: CURRENT_DEVICE_SIG, check })
       });
       return res.json();
