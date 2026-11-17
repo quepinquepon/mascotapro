@@ -1,16 +1,20 @@
 {
+  "id": "./index.html",
   "name": "MascotaPro — Salud y Placa QR",
   "short_name": "MascotaPro",
+  "description": "Control sanitario y placa QR inteligente para mascotas",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#0f172a",
   "theme_color": "#0d9488",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/1076/1076928.png",
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%230d9488'/%3E%3Cellipse cx='256' cy='315' rx='85' ry='70' fill='%23ffffff'/%3E%3Ccircle cx='155' cy='218' r='35' fill='%23ffffff'/%3E%3Ccircle cx='218' cy='170' r='38' fill='%23ffffff'/%3E%3Ccircle cx='294' cy='170' r='38' fill='%23ffffff'/%3E%3Ccircle cx='357' cy='218' r='35' fill='%23ffffff'/%3E%3C/svg%3E",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ]
 }
