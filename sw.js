@@ -1,21 +1,15 @@
-{
-  "name": "MascotaPro",
-  "short_name": "MascotaPro",
-  "start_url": "./index.html",
-  "scope": "./",
-  "display": "standalone",
-  "background_color": "#0d9488",
-  "theme_color": "#0d9488",
-  "icons": [
-    {
-      "src": "./icon.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "./icon.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
-}
+const V = 'mascotapro-2.2.0';
+const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
+self.addEventListener('install', e => e.waitUntil(caches.open(V).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())));
+self.addEventListener('activate', e => e.waitUntil(caches.keys().then(k => Promise.all(k.filter(x => x !== V).map(x => caches.delete(x)))).then(() => self.clients.claim())));
+self.addEventListener('fetch', e => {
+  const r = e.request;
+  if (r.method !== 'GET') return;
+  const same = new URL(r.url).origin === location.origin;
+  if (same) {
+    e.respondWith(fetch(r).then(res => { const cp = res.clone(); caches.open(V).then(c => c.put(r, cp)); return res; })
+      .catch(() => caches.match(r).then(m => m || caches.match('./index.html'))));
+  } else {
+    e.respondWith(caches.match(r).then(m => m || fetch(r).then(res => { const cp = res.clone(); caches.open(V).then(c => c.put(r, cp)); return res; })));
+  }
+});
