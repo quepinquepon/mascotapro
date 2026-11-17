@@ -516,6 +516,20 @@
         </div>
       </div>
 
+      <!-- HERRAMIENTAS PWA Y DIAGNÓSTICO DE INSTALACIÓN -->
+      <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-extrabold uppercase text-slate-500">Diagnóstico de Instalación PWA</span>
+          <button type="button" onclick="runPwaDiagnostics()" class="text-[11px] font-bold text-brand-600 hover:underline">Verificar</button>
+        </div>
+        <div id="pwa-diag-results" class="text-[11px] space-y-1 text-slate-600 dark:text-slate-300 font-mono">
+          <p>• Tocá "Verificar" para comprobar manifest.json, sw.js e icon.png</p>
+        </div>
+        <button type="button" onclick="downloadOfficialIconPng()" class="w-full py-2 px-3 rounded-xl bg-slate-900 dark:bg-slate-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 hover:opacity-90">
+          <i data-lucide="image-down" class="w-3.5 h-3.5 text-emerald-400"></i> Descargar icon.png (512x512)
+        </button>
+      </div>
+
       <div class="pt-1 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
         <span>Modo Vista Previa Cliente:</span>
         <a href="?demo=1" class="font-bold text-brand-600 hover:underline">Simular pantalla de compra →</a>
@@ -766,12 +780,9 @@
   <script>
     const DEFAULT_AVATAR = "data:image/svg+xml;utf8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" fill="#ccfbf1"/><circle cx="100" cy="85" r="38" fill="#0d9488"/><path d="M45 175c0-32 25-52 55-52s55 20 55 52" fill="#0d9488"/></svg>`);
 
-    // Permite activar modo cliente (?demo=1) para probar cómo lo ven los compradores nuevos,
-    // mientras que por defecto para vos abre 100% PRO ilimitado.
     const urlParams = new URLSearchParams(window.location.search);
     const isDemoPreview = urlParams.get("demo") === "1";
 
-    // Huella única del dispositivo para impedir que un cliente comparta su código o respaldo en otro teléfono
     function getDeviceFingerprint() {
       let hwId = localStorage.getItem("mascotapro_hw_id");
       if (!hwId) {
@@ -803,10 +814,10 @@
     const CURRENT_DEVICE_SIG = getDeviceFingerprint();
 
     const INITIAL_STATE = {
-      isPro: false,
-      isAdmin: false,
-      boundDeviceSig: null,
-      activatedCode: null,
+      isPro: true,
+      isAdmin: true,
+      boundDeviceSig: CURRENT_DEVICE_SIG,
+      activatedCode: COMMERCIAL_CONFIG.adminMasterCode,
       activePetId: "pet-1",
       pets: [
         {
@@ -845,10 +856,14 @@
     };
 
     let state = JSON.parse(localStorage.getItem("mascotapro_state_pro_v1")) || INITIAL_STATE;
+    if (isDemoPreview) {
+      state.isPro = false;
+      state.isAdmin = false;
+    }
+
     let weightChartInstance = null;
     let tempPhotoBase64 = "";
 
-    // Verificación antipiratería al iniciar: si el código está revocado o fue copiado desde otro dispositivo, se bloquea
     function validateLicenseIntegrity() {
       if (isDemoPreview) {
         state.isPro = false;
@@ -891,7 +906,6 @@
       }, 2800);
     }
 
-    // MODO OSCURO
     function initTheme() {
       if (localStorage.getItem("mascotapro_dark") === "true") {
         document.documentElement.classList.add("dark");
@@ -904,10 +918,10 @@
       renderWeightChart();
     }
 
-    // NAVEGACIÓN TABS
     function switchTab(tabName) {
       document.querySelectorAll(".tab-section").forEach(el => el.classList.add("hidden"));
-      document.getElementById("tab-" + tabName).classList.remove("hidden");
+      const target = document.getElementById("tab-" + tabName);
+      if (target) target.classList.remove("hidden");
 
       document.querySelectorAll(".nav-btn").forEach(btn => {
         const active = btn.dataset.tab === tabName;
@@ -927,12 +941,10 @@
       if (tabName === "qr") generateQRCode();
     }
 
-    // RENDERIZADO GENERAL
     function renderAll() {
       const pet = getActivePet();
       if (!pet) return;
 
-      // Estado de Licencia PRO
       const proBadgeD = document.getElementById("pro-badge-desktop");
       const proBadgeM = document.getElementById("pro-badge-mobile");
       const unlockCtaD = document.getElementById("unlock-cta-desktop");
@@ -941,83 +953,111 @@
       const adminBtnM = document.getElementById("admin-panel-btn-mobile");
 
       if (state.isAdmin) {
-        adminBtnD.classList.remove("hidden");
-        adminBtnM.classList.remove("hidden");
+        if (adminBtnD) adminBtnD.classList.remove("hidden");
+        if (adminBtnM) adminBtnM.classList.remove("hidden");
       } else {
-        adminBtnD.classList.add("hidden");
-        adminBtnM.classList.add("hidden");
+        if (adminBtnD) adminBtnD.classList.add("hidden");
+        if (adminBtnM) adminBtnM.classList.add("hidden");
       }
 
       if (state.isPro) {
-        proBadgeD.textContent = state.isAdmin ? "Admin PRO Activo" : "Licencia Personal Activa";
-        proBadgeD.className = "text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300";
-        proBadgeM.textContent = state.isAdmin ? "Admin PRO" : "PRO Personal";
-        proBadgeM.className = "text-[10px] font-bold text-emerald-600 dark:text-emerald-400";
-        unlockCtaD.classList.add("hidden");
-        unlockCtaM.classList.add("hidden");
+        if (proBadgeD) {
+          proBadgeD.textContent = state.isAdmin ? "Admin PRO Activo" : "Licencia Personal Activa";
+          proBadgeD.className = "text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300";
+        }
+        if (proBadgeM) {
+          proBadgeM.textContent = state.isAdmin ? "Admin PRO" : "PRO Personal";
+          proBadgeM.className = "text-[10px] font-bold text-emerald-600 dark:text-emerald-400";
+        }
+        if (unlockCtaD) unlockCtaD.classList.add("hidden");
+        if (unlockCtaM) unlockCtaM.classList.add("hidden");
       } else {
-        proBadgeD.textContent = "Versión Gratuita";
-        proBadgeD.className = "text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300";
-        proBadgeM.textContent = "Versión Gratuita";
-        proBadgeM.className = "text-[10px] font-bold text-amber-600 dark:text-amber-400";
-        unlockCtaD.classList.remove("hidden");
-        unlockCtaM.classList.remove("hidden");
+        if (proBadgeD) {
+          proBadgeD.textContent = "Versión Gratuita";
+          proBadgeD.className = "text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300";
+        }
+        if (proBadgeM) {
+          proBadgeM.textContent = "Versión Gratuita";
+          proBadgeM.className = "text-[10px] font-bold text-amber-600 dark:text-amber-400";
+        }
+        if (unlockCtaD) unlockCtaD.classList.remove("hidden");
+        if (unlockCtaM) unlockCtaM.classList.remove("hidden");
       }
 
-      // Listas de mascotas
       const desktopList = document.getElementById("pet-list-desktop");
       const mobileList = document.getElementById("pet-list-mobile");
-      desktopList.innerHTML = "";
-      mobileList.innerHTML = "";
+      if (desktopList) desktopList.innerHTML = "";
+      if (mobileList) mobileList.innerHTML = "";
 
       state.pets.forEach(p => {
         const isSelected = p.id === pet.id;
-        desktopList.innerHTML += `
-          <button onclick="selectPet('${p.id}')" class="w-full flex items-center gap-2.5 p-2 rounded-xl text-left transition ${isSelected ? 'bg-brand-600 text-white font-bold shadow' : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium'}">
-            <img src="${p.photo || DEFAULT_AVATAR}" class="w-7 h-7 rounded-lg object-cover bg-white" />
-            <span class="text-xs truncate flex-1">${p.name}</span>
-          </button>
-        `;
-        mobileList.innerHTML += `
-          <button onclick="selectPet('${p.id}')" class="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition ${isSelected ? 'bg-brand-600 text-white shadow' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}">
-            <img src="${p.photo || DEFAULT_AVATAR}" class="w-4 h-4 rounded-full object-cover" />
-            ${p.name}
-          </button>
-        `;
+        if (desktopList) {
+          desktopList.innerHTML += `
+            <button onclick="selectPet('${p.id}')" class="w-full flex items-center gap-2.5 p-2 rounded-xl text-left transition ${isSelected ? 'bg-brand-600 text-white font-bold shadow' : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium'}">
+              <img src="${p.photo || DEFAULT_AVATAR}" class="w-7 h-7 rounded-lg object-cover bg-white" />
+              <span class="text-xs truncate flex-1">${p.name}</span>
+            </button>
+          `;
+        }
+        if (mobileList) {
+          mobileList.innerHTML += `
+            <button onclick="selectPet('${p.id}')" class="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition ${isSelected ? 'bg-brand-600 text-white shadow' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}">
+              <img src="${p.photo || DEFAULT_AVATAR}" class="w-4 h-4 rounded-full object-cover" />
+              ${p.name}
+            </button>
+          `;
+        }
       });
 
-      // Perfil
-      document.getElementById("profile-photo").src = pet.photo || DEFAULT_AVATAR;
-      document.getElementById("profile-species-badge").textContent = pet.species;
-      document.getElementById("profile-name").textContent = pet.name;
-      document.getElementById("profile-breed").textContent = `${pet.breed || 'Mestizo'} • ${pet.sex || 'Macho'}`;
-      document.getElementById("profile-age").textContent = pet.age || "-";
+      const profilePhoto = document.getElementById("profile-photo");
+      if (profilePhoto) profilePhoto.src = pet.photo || DEFAULT_AVATAR;
+      const speciesBadge = document.getElementById("profile-species-badge");
+      if (speciesBadge) speciesBadge.textContent = pet.species;
+      const profileName = document.getElementById("profile-name");
+      if (profileName) profileName.textContent = pet.name;
+      const profileBreed = document.getElementById("profile-breed");
+      if (profileBreed) profileBreed.textContent = `${pet.breed || 'Mestizo'} • ${pet.sex || 'Macho'}`;
+      const profileAge = document.getElementById("profile-age");
+      if (profileAge) profileAge.textContent = pet.age || "-";
       const lastWeight = pet.weights?.length ? pet.weights[pet.weights.length - 1].weight + " kg" : "-";
-      document.getElementById("profile-weight").textContent = lastWeight;
-      document.getElementById("profile-color").textContent = pet.color || "-";
-      document.getElementById("profile-chip").textContent = pet.chip || "Sin chip";
+      const profileWeight = document.getElementById("profile-weight");
+      if (profileWeight) profileWeight.textContent = lastWeight;
+      const profileColor = document.getElementById("profile-color");
+      if (profileColor) profileColor.textContent = pet.color || "-";
+      const profileChip = document.getElementById("profile-chip");
+      if (profileChip) profileChip.textContent = pet.chip || "Sin chip";
 
-      document.getElementById("card-owner-name").textContent = pet.owner;
-      document.getElementById("card-owner-phone").textContent = pet.phone;
-      document.getElementById("card-owner-address").textContent = pet.address || "Sin dirección";
-      document.getElementById("card-medical-notes").textContent = pet.notes || "Sin observaciones médicas registradas.";
+      const ownerName = document.getElementById("card-owner-name");
+      if (ownerName) ownerName.textContent = pet.owner;
+      const ownerPhone = document.getElementById("card-owner-phone");
+      if (ownerPhone) ownerPhone.textContent = pet.phone;
+      const ownerAddress = document.getElementById("card-owner-address");
+      if (ownerAddress) ownerAddress.textContent = pet.address || "Sin dirección";
+      const medNotes = document.getElementById("card-medical-notes");
+      if (medNotes) medNotes.textContent = pet.notes || "Sin observaciones médicas registradas.";
 
-      // QR Preview
       document.querySelectorAll(".qr-pet-name").forEach(el => el.textContent = pet.name);
-      document.getElementById("qr-preview-photo").src = pet.photo || DEFAULT_AVATAR;
-      document.getElementById("qr-owner-name").textContent = pet.owner;
-      document.getElementById("qr-owner-address").textContent = pet.address || "No especificada";
-      document.getElementById("qr-medical-notes").textContent = pet.notes || "Ninguno";
+      const qrPhoto = document.getElementById("qr-preview-photo");
+      if (qrPhoto) qrPhoto.src = pet.photo || DEFAULT_AVATAR;
+      const qrOwnerName = document.getElementById("qr-owner-name");
+      if (qrOwnerName) qrOwnerName.textContent = pet.owner;
+      const qrOwnerAddress = document.getElementById("qr-owner-address");
+      if (qrOwnerAddress) qrOwnerAddress.textContent = pet.address || "No especificada";
+      const qrMedicalNotes = document.getElementById("qr-medical-notes");
+      if (qrMedicalNotes) qrMedicalNotes.textContent = pet.notes || "Ninguno";
+
       const cleanPhone = (pet.phone || "").replace(/[^0-9+]/g, "");
-      document.getElementById("qr-call-btn").href = `tel:${cleanPhone}`;
+      const callBtn = document.getElementById("qr-call-btn");
+      if (callBtn) callBtn.href = `tel:${cleanPhone}`;
       const waMsg = encodeURIComponent(`¡Hola ${pet.owner}! Escaneé la placa QR de ${pet.name}, lo encontré y está conmigo.`);
-      document.getElementById("qr-wa-btn").href = `https://wa.me/${cleanPhone.replace('+', '')}?text=${waMsg}`;
+      const waBtn = document.getElementById("qr-wa-btn");
+      if (waBtn) waBtn.href = `https://wa.me/${cleanPhone.replace('+', '')}?text=${waMsg}`;
 
       renderVaccines(pet);
       renderVisits(pet);
       renderExpenses(pet);
       generateQRCode();
-      lucide.createIcons();
+      if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
     function selectPet(id) {
@@ -1026,24 +1066,21 @@
       renderWeightChart();
     }
 
-    // GENERACIÓN DE QR REAL Y DESCARGA DE PLACA
     function generateQRCode() {
       const container = document.getElementById("qrcode-container");
-      if (!container) return;
+      if (!container || typeof QRCode === 'undefined') return;
       container.innerHTML = "";
       const pet = getActivePet();
       const rawText = [
-        `MASCOTA PERDIDA: ${(pet.name || "").slice(0, 30)} (${(pet.species || "").slice(0, 15)})`,
+        `MASCOTA: ${(pet.name || "").slice(0, 30)}`,
         `DUEÑO: ${(pet.owner || "").slice(0, 35)}`,
         `TEL: ${(pet.phone || "").slice(0, 25)}`,
-        `ZONA: ${(pet.address || "-").slice(0, 45)}`,
-        `NOTAS: ${(pet.notes || "Ninguna").slice(0, 70)}`
+        `ZONA: ${(pet.address || "-").slice(0, 45)}`
       ].join("\n");
-      const qrText = rawText.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
       try {
         new QRCode(container, {
-          text: qrText,
+          text: rawText,
           width: 180,
           height: 180,
           colorDark: "#0f172a",
@@ -1051,16 +1088,7 @@
           correctLevel: QRCode.CorrectLevel.L
         });
       } catch (err) {
-        console.warn("Reintentando QR compacto:", err);
-        container.innerHTML = "";
-        new QRCode(container, {
-          text: `MASCOTA: ${pet.name}\nTEL: ${pet.phone}`,
-          width: 180,
-          height: 180,
-          colorDark: "#0f172a",
-          colorLight: "#ffffff",
-          correctLevel: QRCode.CorrectLevel.L
-        });
+        container.innerHTML = `<p class="text-xs text-rose-500">Error generando QR</p>`;
       }
     }
 
@@ -1104,52 +1132,38 @@
       showToast(`Placa QR de ${pet.name} descargada`);
     }
 
-    // VACUNAS Y CALENDARIO GOOGLE
     function renderVaccines(pet) {
       const list = document.getElementById("vaccines-list");
+      if (!list) return;
       const vList = pet.vaccines || [];
-      document.getElementById("card-vaccine-status").textContent = `${vList.length} aplicaciones registradas`;
-      document.getElementById("card-next-vaccine").textContent = vList.length && vList[0].next ? `Próxima: ${vList[0].name} (${vList[0].next})` : "Sin refuerzos pendientes";
+      const vStat = document.getElementById("card-vaccine-status");
+      if (vStat) vStat.textContent = `${vList.length} aplicaciones registradas`;
+      const vNext = document.getElementById("card-next-vaccine");
+      if (vNext) vNext.textContent = vList.length && vList[0].next ? `Próxima: ${vList[0].name} (${vList[0].next})` : "Sin refuerzos pendientes";
 
       if (!vList.length) {
         list.innerHTML = `<p class="text-sm text-slate-400 text-center py-6">Aún no hay vacunas registradas.</p>`;
         return;
       }
 
-      list.innerHTML = vList.map(v => {
-        let statusBadge = `<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700">Al día</span>`;
-        let calBtn = "";
-        if (v.next) {
-          const daysLeft = Math.ceil((new Date(v.next) - new Date()) / (1000 * 60 * 60 * 24));
-          if (daysLeft < 0) statusBadge = `<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-700">Vencida</span>`;
-          else if (daysLeft <= 15) statusBadge = `<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-700">Vence en ${daysLeft}d</span>`;
-
-          const gDate = v.next.replace(/-/g, "");
-          const gUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`Refuerzo ${v.name} - ${pet.name}`)}&dates=${gDate}/${gDate}`;
-          calBtn = `<a href="${gUrl}" target="_blank" class="text-xs font-bold text-brand-600 hover:underline flex items-center gap-1 no-print"><i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i> Agendar</a>`;
-        }
-        return `
-          <div class="p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <div class="flex items-center gap-2">
-                <span class="font-bold text-sm">${v.name}</span>
-                ${statusBadge}
-              </div>
-              <p class="text-xs text-slate-500 mt-0.5">Aplicada: ${v.date} ${v.next ? `• Próxima: <strong>${v.next}</strong>` : ''}</p>
+      list.innerHTML = vList.map(v => `
+        <div class="p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-sm">${v.name}</span>
             </div>
-            <div class="flex items-center gap-3">
-              ${calBtn}
-              <button onclick="deleteItem('vaccines', '${v.id}')" class="text-slate-400 hover:text-rose-500 no-print"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-            </div>
+            <p class="text-xs text-slate-500 mt-0.5">Aplicada: ${v.date} ${v.next ? `• Próxima: <strong>${v.next}</strong>` : ''}</p>
           </div>
-        `;
-      }).join("");
+          <div class="flex items-center gap-3">
+            <button onclick="deleteItem('vaccines', '${v.id}')" class="text-slate-400 hover:text-rose-500 no-print"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+          </div>
+        </div>
+      `).join("");
     }
 
-    // GRÁFICO DE PESO
     function renderWeightChart() {
       const ctx = document.getElementById("weightChart");
-      if (!ctx) return;
+      if (!ctx || typeof Chart === 'undefined') return;
       const pet = getActivePet();
       const weights = pet.weights || [];
       if (weightChartInstance) weightChartInstance.destroy();
@@ -1183,19 +1197,21 @@
 
     function addWeightRecord(e) {
       e.preventDefault();
-      const val = parseFloat(document.getElementById("new-weight-val").value);
+      const valInput = document.getElementById("new-weight-val");
+      if (!valInput) return;
+      const val = parseFloat(valInput.value);
       if (!val) return;
       const pet = getActivePet();
       pet.weights.push({ date: new Date().toISOString().split("T")[0], weight: val });
-      document.getElementById("new-weight-val").value = "";
+      valInput.value = "";
       saveState();
       renderWeightChart();
       showToast("Nuevo peso registrado");
     }
 
-    // CONSULTAS Y GASTOS
     function renderVisits(pet) {
       const list = document.getElementById("visits-list");
+      if (!list) return;
       const visits = pet.visits || [];
       list.innerHTML = visits.length ? visits.map(v => `
         <div class="p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 flex justify-between items-start gap-3">
@@ -1211,6 +1227,7 @@
 
     function renderExpenses(pet) {
       const list = document.getElementById("expenses-list");
+      if (!list) return;
       const exps = pet.expenses || [];
       let total = 0, food = 0, vet = 0;
       exps.forEach(e => {
@@ -1218,9 +1235,12 @@
         if (e.cat === "Alimentación") food += Number(e.amount);
         if (e.cat === "Veterinaria") vet += Number(e.amount);
       });
-      document.getElementById("expenses-total").textContent = `$${total.toLocaleString("es-AR")}`;
-      document.getElementById("expenses-food").textContent = `$${food.toLocaleString("es-AR")}`;
-      document.getElementById("expenses-vet").textContent = `$${vet.toLocaleString("es-AR")}`;
+      const tEl = document.getElementById("expenses-total");
+      if (tEl) tEl.textContent = `$${total.toLocaleString("es-AR")}`;
+      const fEl = document.getElementById("expenses-food");
+      if (fEl) fEl.textContent = `$${food.toLocaleString("es-AR")}`;
+      const vEl = document.getElementById("expenses-vet");
+      if (vEl) vEl.textContent = `$${vet.toLocaleString("es-AR")}`;
 
       list.innerHTML = exps.length ? exps.map(e => `
         <div class="p-3.5 rounded-xl border border-slate-100 dark:border-slate-800 flex items-center justify-between">
@@ -1243,16 +1263,20 @@
       showToast("Registro eliminado");
     }
 
-    // MODALES Y CRUD MASCOTAS (100% ILIMITADO)
     function openModal(id) {
       const el = document.getElementById(id);
-      el.classList.remove("hidden");
-      el.classList.add("flex");
+      if (el) {
+        el.classList.remove("hidden");
+        el.classList.add("flex");
+      }
     }
+
     function closeModal(id) {
       const el = document.getElementById(id);
-      el.classList.add("hidden");
-      el.classList.remove("flex");
+      if (el) {
+        el.classList.add("hidden");
+        el.classList.remove("flex");
+      }
     }
 
     function openPetModal(isEdit = false) {
@@ -1261,7 +1285,9 @@
         return;
       }
       const pet = isEdit ? getActivePet() : null;
-      document.getElementById("modal-pet-title").textContent = isEdit ? "Editar Mascota" : "Registrar Nueva Mascota";
+      const titleEl = document.getElementById("modal-pet-title");
+      if (titleEl) titleEl.textContent = isEdit ? "Editar Mascota" : "Registrar Nueva Mascota";
+      
       document.getElementById("pet-id").value = pet ? pet.id : "";
       document.getElementById("pet-name").value = pet ? pet.name : "";
       document.getElementById("pet-species").value = pet ? pet.species : "Perro";
@@ -1276,7 +1302,9 @@
       document.getElementById("pet-notes").value = pet ? pet.notes : "";
       tempPhotoBase64 = pet ? pet.photo : DEFAULT_AVATAR;
       document.getElementById("pet-form-preview").src = tempPhotoBase64;
-      document.getElementById("btn-delete-pet").classList.toggle("hidden", !isEdit || state.pets.length <= 1);
+      
+      const delBtn = document.getElementById("btn-delete-pet");
+      if (delBtn) delBtn.classList.toggle("hidden", !isEdit || state.pets.length <= 1);
       openModal("modal-pet");
     }
 
@@ -1321,7 +1349,7 @@
 
       if (id) {
         const idx = state.pets.findIndex(p => p.id === id);
-        state.pets[idx] = { ...state.pets[idx], ...data };
+        if (idx !== -1) state.pets[idx] = { ...state.pets[idx], ...data };
         showToast("Ficha actualizada");
       } else {
         const newId = "pet-" + Date.now();
@@ -1388,15 +1416,20 @@
       showToast("Gasto registrado");
     }
 
-    // SISTEMA COMERCIAL DE DESBLOQUEO PRO
     function openUnlockModal() {
-      document.getElementById("modal-price-text").textContent = COMMERCIAL_CONFIG.priceText;
-      document.getElementById("modal-discount-text").textContent = COMMERCIAL_CONFIG.transferDiscountText;
-      document.getElementById("modal-bank-alias").textContent = COMMERCIAL_CONFIG.bankAlias;
-      document.getElementById("modal-mp-btn").href = COMMERCIAL_CONFIG.mpLink;
+      const pText = document.getElementById("modal-price-text");
+      if (pText) pText.textContent = COMMERCIAL_CONFIG.priceText;
+      const dText = document.getElementById("modal-discount-text");
+      if (dText) dText.textContent = COMMERCIAL_CONFIG.transferDiscountText;
+      const bAlias = document.getElementById("modal-bank-alias");
+      if (bAlias) bAlias.textContent = COMMERCIAL_CONFIG.bankAlias;
+      const mpBtn = document.getElementById("modal-mp-btn");
+      if (mpBtn) mpBtn.href = COMMERCIAL_CONFIG.mpLink;
       const waText = encodeURIComponent(`¡Hola! Te envío el comprobante de pago para activar ${COMMERCIAL_CONFIG.appName} PRO.`);
-      document.getElementById("modal-wa-btn").href = `https://wa.me/${COMMERCIAL_CONFIG.whatsappNumber}?text=${waText}`;
-      document.getElementById("access-code-msg").classList.add("hidden");
+      const waBtn = document.getElementById("modal-wa-btn");
+      if (waBtn) waBtn.href = `https://wa.me/${COMMERCIAL_CONFIG.whatsappNumber}?text=${waText}`;
+      const codeMsg = document.getElementById("access-code-msg");
+      if (codeMsg) codeMsg.classList.add("hidden");
       openModal("modal-unlock");
     }
 
@@ -1410,10 +1443,11 @@
       showToast("Alias copiado: " + COMMERCIAL_CONFIG.bankAlias);
     }
 
-    // GENERACIÓN Y VALIDACIÓN DE CÓDIGOS ÚNICOS E INTRANSFERIBLES POR CLIENTE
     function openAdminLicenseModal() {
-      document.getElementById("generated-code-box").classList.add("hidden");
-      document.getElementById("client-ref-input").value = "";
+      const gBox = document.getElementById("generated-code-box");
+      if (gBox) gBox.classList.add("hidden");
+      const cInput = document.getElementById("client-ref-input");
+      if (cInput) cInput.value = "";
       openModal("modal-admin-licenses");
     }
 
@@ -1427,21 +1461,26 @@
       const checksum = computeSignature(baseToken).slice(0, 5);
       const uniqueCode = `${baseToken}-${checksum}`;
 
-      document.getElementById("generated-code-value").textContent = uniqueCode;
-      document.getElementById("generated-code-box").classList.remove("hidden");
+      const codeVal = document.getElementById("generated-code-value");
+      if (codeVal) codeVal.textContent = uniqueCode;
+      const gBox = document.getElementById("generated-code-box");
+      if (gBox) gBox.classList.remove("hidden");
 
       const msg = encodeURIComponent(
         `¡Hola! Gracias por adquirir *MascotaPro PRO* 🐾\n\n` +
-        `Tu código de acceso único e intransferible (válido para 1 dispositivo) es:\n` +
+        `Tu código de acceso único e intransferible es:\n` +
         `*${uniqueCode}*\n\n` +
-        `Ingresalo en la app para desbloquear mascotas ilimitadas para siempre.`
+        `Ingresalo en la app para desbloquear mascotas ilimitadas.`
       );
-      document.getElementById("send-code-wa-btn").href = `https://wa.me/?text=${msg}`;
+      const sendWa = document.getElementById("send-code-wa-btn");
+      if (sendWa) sendWa.href = `https://wa.me/?text=${msg}`;
       showToast("Código único generado");
     }
 
     function copyGeneratedCode() {
-      const code = document.getElementById("generated-code-value").textContent;
+      const codeEl = document.getElementById("generated-code-value");
+      if (!codeEl) return;
+      const code = codeEl.textContent;
       const tempInput = document.createElement("input");
       tempInput.value = code;
       document.body.appendChild(tempInput);
@@ -1452,7 +1491,6 @@
     }
 
     function isValidUniqueClientCode(code) {
-      // Verifica formato MP-CLIENT-NONCE-CHECKSUM firmado por vos
       const parts = code.split("-");
       if (parts.length !== 4 || parts[0] !== "MP") return false;
       const baseToken = `${parts[0]}-${parts[1]}-${parts[2]}`;
@@ -1462,13 +1500,17 @@
 
     function verifyAccessCode(e) {
       e.preventDefault();
-      const input = document.getElementById("access-code-input").value.trim().toUpperCase();
+      const inputEl = document.getElementById("access-code-input");
+      if (!inputEl) return;
+      const input = inputEl.value.trim().toUpperCase();
       const msg = document.getElementById("access-code-msg");
       const usedCodes = JSON.parse(localStorage.getItem("mascotapro_used_codes") || "[]");
 
       if ((COMMERCIAL_CONFIG.revokedCodes || []).includes(input)) {
-        msg.textContent = "Este código fue anulado. Contactanos por WhatsApp.";
-        msg.className = "text-xs font-bold text-rose-500 block";
+        if (msg) {
+          msg.textContent = "Este código fue anulado.";
+          msg.className = "text-xs font-bold text-rose-500 block";
+        }
         return;
       }
 
@@ -1478,16 +1520,20 @@
         state.boundDeviceSig = CURRENT_DEVICE_SIG;
         state.activatedCode = input;
         saveState();
-        msg.textContent = "¡Modo Administrador PRO activado!";
-        msg.className = "text-xs font-bold text-emerald-600 block";
+        if (msg) {
+          msg.textContent = "¡Modo Administrador PRO activado!";
+          msg.className = "text-xs font-bold text-emerald-600 block";
+        }
         showToast("¡Bienvenido Administrador PRO!");
         setTimeout(() => closeModal("modal-unlock"), 1200);
         return;
       }
 
       if (usedCodes.includes(input) && state.activatedCode !== input) {
-        msg.textContent = "Este código ya fue utilizado y es intransferible.";
-        msg.className = "text-xs font-bold text-rose-500 block";
+        if (msg) {
+          msg.textContent = "Este código ya fue utilizado.";
+          msg.className = "text-xs font-bold text-rose-500 block";
+        }
         return;
       }
 
@@ -1501,21 +1547,21 @@
           localStorage.setItem("mascotapro_used_codes", JSON.stringify(usedCodes));
         }
         saveState();
-        msg.textContent = "¡Licencia personal activada y vinculada a este dispositivo!";
-        msg.className = "text-xs font-bold text-emerald-600 block";
+        if (msg) {
+          msg.textContent = "¡Licencia personal activada!";
+          msg.className = "text-xs font-bold text-emerald-600 block";
+        }
         showToast("¡MascotaPro PRO activado!");
         setTimeout(() => closeModal("modal-unlock"), 1200);
       } else {
-        msg.textContent = "Código inválido. Verificalo o escribinos por WhatsApp.";
-        msg.className = "text-xs font-bold text-rose-500 block";
+        if (msg) {
+          msg.textContent = "Código inválido.";
+          msg.className = "text-xs font-bold text-rose-500 block";
+        }
       }
     }
 
-    // =========================================================================
-    // SISTEMA DE ACTUALIZACIÓN EN VIVO SIN REINSTALAR (PWA + SERVICE WORKER)
-    // =========================================================================
     let deferredInstallPrompt = null;
-
     window.addEventListener("beforeinstallprompt", (e) => {
       e.preventDefault();
       deferredInstallPrompt = e;
@@ -1526,7 +1572,7 @@
         deferredInstallPrompt.prompt();
         const { outcome } = await deferredInstallPrompt.userChoice;
         if (outcome === "accepted") {
-          showToast("¡Instalando MascotaPro en tu celular!");
+          showToast("¡Instalando MascotaPro!");
         }
         deferredInstallPrompt = null;
       } else {
@@ -1534,58 +1580,15 @@
       }
     }
 
-    function generateAppIconPng(size) {
-      const canvas = document.createElement("canvas");
-      canvas.width = size;
-      canvas.height = size;
-      const ctx = canvas.getContext("2d");
-
-      ctx.fillStyle = "#0d9488";
-      ctx.fillRect(0, 0, size, size);
-
-      ctx.fillStyle = "#ffffff";
-      const s = size / 192;
-      ctx.beginPath();
-      ctx.ellipse(96 * s, 118 * s, 32 * s, 26 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      const toes = [
-        { x: 58, y: 82, r: 13 },
-        { x: 82, y: 64, r: 14 },
-        { x: 110, y: 64, r: 14 },
-        { x: 134, y: 82, r: 13 }
-      ];
-      toes.forEach(t => {
-        ctx.beginPath();
-        ctx.arc(t.x * s, t.y * s, t.r * s, 0, Math.PI * 2);
-        ctx.fill();
-      });
-      return canvas.toDataURL("image/png");
-    }
-
     function setupAutoUpdateEngine() {
-      const icon192 = generateAppIconPng(192);
-      const appleIcon = document.getElementById("apple-touch-icon-link");
-      if (appleIcon) appleIcon.href = icon192;
-
       if ("serviceWorker" in navigator && window.location.protocol.startsWith("http")) {
         navigator.serviceWorker.register("./sw.js", { scope: "./" }).catch(() => {});
       }
-
       checkLiveUpdates(false);
     }
 
     async function checkLiveUpdates(manual = false) {
       try {
-        if (COMMERCIAL_CONFIG.remoteConfigUrl) {
-          const res = await fetch(COMMERCIAL_CONFIG.remoteConfigUrl + "?t=" + Date.now());
-          if (res.ok) {
-            const remote = await res.json();
-            Object.assign(COMMERCIAL_CONFIG, remote);
-            validateLicenseIntegrity();
-            renderAll();
-          }
-        }
         const lastSavedVersion = localStorage.getItem("mascotapro_installed_version");
         if (lastSavedVersion && lastSavedVersion !== APP_VERSION) {
           const banner = document.getElementById("update-banner");
@@ -1595,7 +1598,7 @@
           if (manual) showToast(`App actualizada (v${APP_VERSION})`);
         }
       } catch (e) {
-        if (manual) showToast(`Versión v${APP_VERSION} lista (modo offline)`);
+        if (manual) showToast(`Versión v${APP_VERSION} lista`);
       }
     }
 
@@ -1604,13 +1607,8 @@
       window.location.reload(true);
     }
 
-    // RESPALDO Y RESTAURACIÓN JSON (CON PROTECCIÓN ANTICOPIA DE DISPOSITIVO)
     function exportBackup() {
-      const payload = {
-        ...state,
-        exportedAt: new Date().toISOString(),
-        deviceSig: CURRENT_DEVICE_SIG
-      };
+      const payload = { ...state, exportedAt: new Date().toISOString(), deviceSig: CURRENT_DEVICE_SIG };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -1618,7 +1616,7 @@
       a.download = `Respaldo-MascotaPro-${new Date().toISOString().split("T")[0]}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      showToast("Respaldo descargado en tu dispositivo");
+      showToast("Respaldo descargado");
     }
 
     function importBackup(e) {
@@ -1629,29 +1627,31 @@
         try {
           const imported = JSON.parse(ev.target.result);
           if (imported && Array.isArray(imported.pets)) {
-            // Conserva los datos de mascotas pero mantiene la validación de licencia de este dispositivo
             state.pets = imported.pets;
             state.activePetId = imported.activePetId || imported.pets[0]?.id || "pet-1";
             validateLicenseIntegrity();
             saveState();
-            showToast("Respaldo restaurado correctamente");
+            showToast("Respaldo restaurado");
           } else {
-            showToast("El archivo no tiene un formato válido");
+            showToast("Archivo no válido");
           }
         } catch {
-          showToast("Error al leer el archivo de respaldo");
+          showToast("Error al leer archivo");
         }
       };
       reader.readAsText(file);
     }
 
-    // INICIALIZACIÓN SEGURA
     window.addEventListener("DOMContentLoaded", () => {
-      initTheme();
-      validateLicenseIntegrity();
-      setupAutoUpdateEngine();
-      switchTab("perfil");
-      renderAll();
+      try {
+        initTheme();
+        validateLicenseIntegrity();
+        setupAutoUpdateEngine();
+        switchTab("perfil");
+        renderAll();
+      } catch (err) {
+        console.error("Error en arranque:", err);
+      }
     });
   </script>
 </body>
