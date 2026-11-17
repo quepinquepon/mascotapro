@@ -46,6 +46,7 @@
     }
     button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}
     @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+    @media print{#printable-area .from-brand-700{background:#fff!important}#printable-area .from-brand-700 *{color:#000!important;background:transparent!important}}
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -71,7 +72,7 @@
        CONFIGURACIÓN COMERCIAL Y ACTUALIZACIÓN REMOTA (100% GRATUITA)
        ===================================================================== -->
   <script>
-    const APP_VERSION = "2.2.0"; // Incrementá este número cada vez que subas mejoras a GitHub
+    const APP_VERSION = "2.3.0"; // Incrementá este número cada vez que subas mejoras a GitHub
 
     const COMMERCIAL_CONFIG = {
       appName: "MascotaPro",
@@ -83,14 +84,9 @@
       // Opcional: URL gratuita de un archivo JSON en tu GitHub (raw.githubusercontent.com)
       // para cambiar precios, alias o códigos en todas las apps sin tocar el HTML
       remoteConfigUrl: "",
-      adminMasterCode: "ADMIN2026", // Tu clave maestra de creador/administrador
-      licenseSecretSalt: "MASCOTAPRO_RIO4_2026_SECURE", // Firma criptográfica única (no cambiar después de vender)
-      // Códigos individuales extra o revocados (100% gratuito)
-      validCodes: [
-        "MASCOTA2026",
-        "PRO2026"
-      ],
-      revokedCodes: [] // Si querés anular un código vendido, agregalo acá
+      supabaseUrl: "",      // https://TU-PROYECTO.supabase.co (pasos en supabase/LEEME.md)
+      supabaseAnonKey: "",  // clave "anon" pública del proyecto
+      licenseSecretSalt: "MASCOTAPRO_RIO4_2026_SECURE", // solo identifica dispositivos; no es un secreto
     };
   </script>
 
@@ -140,7 +136,7 @@
     <!-- Selector de Mascotas -->
     <div class="p-4 border-b border-slate-100 dark:border-slate-800">
       <div class="flex items-center justify-between mb-2">
-        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Mis Mascotas</span>
+        <span class="text-xs font-bold text-slate-500 dark:text-slate-400">Mis Mascotas</span>
         <button onclick="openPetModal()" class="text-xs font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1">
           <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> Agregar
         </button>
@@ -179,7 +175,7 @@
         <i data-lucide="crown" class="w-4 h-4"></i> Activar Versión PRO
       </button>
       <div class="flex items-center justify-between">
-        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Copia de Seguridad</span>
+        <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">Copia de Seguridad</span>
         <button onclick="checkLiveUpdates(true)" title="Buscar actualizaciones" class="text-[11px] font-bold text-brand-600 hover:underline flex items-center gap-1">
           <i data-lucide="refresh-cw" class="w-3 h-3"></i> Actualizar
         </button>
@@ -244,7 +240,7 @@
 
       <!-- TAB 1: PERFIL Y RESUMEN -->
       <section id="tab-perfil" class="tab-section space-y-6">
-        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-center sm:items-start gap-6">
+        <div class="bg-gradient-to-br from-brand-700 to-brand-900 text-white rounded-3xl p-6 md:p-8 shadow-lg flex flex-col sm:flex-row items-center sm:items-start gap-6">
           <div class="relative shrink-0">
             <img id="profile-photo" src="" alt="Mascota" class="w-28 h-28 rounded-2xl object-cover border-4 border-brand-50 dark:border-slate-800 shadow-md bg-slate-100" />
             <span id="profile-species-badge" class="absolute -bottom-2 -right-2 px-2.5 py-0.5 rounded-full text-xs font-bold bg-brand-600 text-white shadow">Perro</span>
@@ -252,11 +248,11 @@
           <div class="flex-1 text-center sm:text-left space-y-2 w-full">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <h2 id="profile-name" class="text-2xl font-extrabold text-slate-900 dark:text-white">Toby</h2>
-                <p id="profile-breed" class="text-sm text-slate-500 dark:text-slate-400 font-medium">Golden Retriever • Macho</p>
+                <h2 id="profile-name" class="text-3xl font-extrabold tracking-tight text-white">Toby</h2>
+                <p id="profile-breed" class="text-sm text-brand-100 font-medium">Golden Retriever • Macho</p>
               </div>
               <div class="flex items-center justify-center sm:justify-end gap-2 no-print">
-                <button onclick="openPetModal(true)" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold flex items-center gap-1.5">
+                <button onclick="openPetModal(true)" class="px-3 py-1.5 rounded-xl text-slate-800 bg-slate-100 dark:bg-slate-800 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold flex items-center gap-1.5">
                   <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Editar
                 </button>
                 <button onclick="window.print()" class="px-3 py-1.5 rounded-xl bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 text-xs font-bold flex items-center gap-1.5">
@@ -266,20 +262,20 @@
             </div>
 
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3">
-              <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
-                <span class="text-[11px] text-slate-500 dark:text-slate-400 font-semibold block">Edad</span>
+              <div class="p-3 rounded-xl bg-white/10">
+                <span class="text-[11px] text-brand-200 font-semibold block">Edad</span>
                 <span id="profile-age" class="text-sm font-bold">3 años</span>
               </div>
-              <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
-                <span class="text-[11px] text-slate-500 dark:text-slate-400 font-semibold block">Peso Actual</span>
+              <div class="p-3 rounded-xl bg-white/10">
+                <span class="text-[11px] text-brand-200 font-semibold block">Peso Actual</span>
                 <span id="profile-weight" class="text-sm font-bold">28.5 kg</span>
               </div>
-              <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
-                <span class="text-[11px] text-slate-500 dark:text-slate-400 font-semibold block">Color / Señas</span>
+              <div class="p-3 rounded-xl bg-white/10">
+                <span class="text-[11px] text-brand-200 font-semibold block">Color / Señas</span>
                 <span id="profile-color" class="text-sm font-bold truncate block">Dorado claro</span>
               </div>
-              <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60">
-                <span class="text-[11px] text-slate-500 dark:text-slate-400 font-semibold block">Microchip / ID</span>
+              <div class="p-3 rounded-xl bg-white/10">
+                <span class="text-[11px] text-brand-200 font-semibold block">Microchip / ID</span>
                 <span id="profile-chip" class="text-sm font-bold truncate block">#981020034</span>
               </div>
             </div>
@@ -290,7 +286,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-bold uppercase text-slate-500 dark:text-slate-400">Contacto de Emergencia</span>
+              <span class="text-xs font-bold text-slate-500 dark:text-slate-400">Contacto de Emergencia</span>
               <i data-lucide="phone-call" class="w-4 h-4 text-rose-500"></i>
             </div>
             <p id="card-owner-name" class="font-bold text-base">Laura Fernández</p>
@@ -300,7 +296,7 @@
 
           <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-bold uppercase text-slate-500 dark:text-slate-400">Estado Sanitario</span>
+              <span class="text-xs font-bold text-slate-500 dark:text-slate-400">Estado Sanitario</span>
               <i data-lucide="shield-check" class="w-4 h-4 text-emerald-500"></i>
             </div>
             <p id="card-vaccine-status" class="font-bold text-base">2 vacunas al día</p>
@@ -310,7 +306,7 @@
 
           <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
             <div class="flex items-center justify-between">
-              <span class="text-xs font-bold uppercase text-slate-500 dark:text-slate-400">Notas Médicas / Alergias</span>
+              <span class="text-xs font-bold text-slate-500 dark:text-slate-400">Notas Médicas / Alergias</span>
               <i data-lucide="alert-circle" class="w-4 h-4 text-amber-500"></i>
             </div>
             <p id="card-medical-notes" class="text-sm text-slate-600 dark:text-slate-300 line-clamp-3">Sin alergias conocidas. Toma condroprotector cada mañana.</p>
@@ -323,7 +319,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <!-- Generador y Descarga de Placa -->
           <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col items-center text-center space-y-4">
-            <span class="px-3 py-1 rounded-full bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-xs font-extrabold uppercase tracking-wide">Identificación Inteligente</span>
+            <span class="px-3 py-1 rounded-full bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-xs font-extrabold tracking-wide">Identificación Inteligente</span>
             <h3 class="text-xl font-extrabold">Placa QR de <span class="qr-pet-name">Toby</span></h3>
             <p class="text-xs text-slate-500 max-w-sm">Al escanear este código con cualquier celular, muestra los datos de contacto directo para llamarte o escribirte por WhatsApp al instante, incluso sin internet.</p>
 
@@ -344,7 +340,7 @@
           <!-- Vista Previa de lo que ve quien encuentra la mascota -->
           <div class="bg-slate-900 text-white rounded-2xl p-6 shadow-xl border border-slate-800 space-y-5 relative overflow-hidden">
             <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-              <span class="text-xs font-bold uppercase tracking-wider text-rose-400 flex items-center gap-1.5">
+              <span class="text-xs font-bold text-rose-400 flex items-center gap-1.5">
                 <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span> Vista al escanear el collar
               </span>
               <span class="text-xs text-slate-500 dark:text-slate-400">Modo Emergencia</span>
@@ -427,15 +423,15 @@
       <section id="tab-gastos" class="tab-section hidden space-y-6">
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800">
-            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Total Acumulado</span>
+            <span class="text-xs font-bold text-slate-500 dark:text-slate-400">Total Acumulado</span>
             <p id="expenses-total" class="text-2xl font-extrabold text-brand-600 mt-1">$0</p>
           </div>
           <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800">
-            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Alimentación</span>
+            <span class="text-xs font-bold text-slate-500 dark:text-slate-400">Alimentación</span>
             <p id="expenses-food" class="text-2xl font-extrabold mt-1">$0</p>
           </div>
           <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800">
-            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Veterinaria y Farmacia</span>
+            <span class="text-xs font-bold text-slate-500 dark:text-slate-400">Veterinaria y Farmacia</span>
             <p id="expenses-vet" class="text-2xl font-extrabold mt-1">$0</p>
           </div>
         </div>
@@ -504,10 +500,10 @@
 
       <div id="generated-code-box" class="hidden p-4 rounded-2xl bg-slate-950 text-white space-y-2.5 border border-amber-500/40">
         <div class="flex items-center justify-between">
-          <span class="text-[11px] uppercase font-bold text-amber-400">Código Único Generado:</span>
+          <span class="text-[11px] font-bold text-amber-400">Código Único Generado:</span>
           <span class="text-[10px] text-slate-500 dark:text-slate-400">1 Dispositivo</span>
         </div>
-        <p id="generated-code-value" class="font-mono text-base font-extrabold tracking-wider text-emerald-400 select-all break-all">MP-XXXX-XXXX</p>
+        <p id="generated-code-value" class="font-mono text-base font-extrabold text-emerald-400 select-all break-all">MP-XXXX-XXXX</p>
         <div class="flex gap-2 pt-1">
           <button type="button" onclick="copyGeneratedCode()" class="flex-1 py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold flex items-center justify-center gap-1.5">
             <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copiar Código
@@ -521,7 +517,7 @@
       <!-- HERRAMIENTAS PWA Y DIAGNÓSTICO DE INSTALACIÓN -->
       <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-2.5">
         <div class="flex items-center justify-between">
-          <span class="text-[11px] font-extrabold uppercase text-slate-500">Diagnóstico de Instalación PWA</span>
+          <span class="text-[11px] font-extrabold text-slate-500">Diagnóstico de Instalación PWA</span>
           <button type="button" onclick="runPwaDiagnostics()" class="text-[11px] font-bold text-brand-600 hover:underline">Verificar</button>
         </div>
         <div id="pwa-diag-results" class="text-[11px] space-y-1 text-slate-600 dark:text-slate-300 font-mono">
@@ -563,7 +559,7 @@
       </div>
 
       <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl space-y-3 text-xs">
-        <p class="font-bold uppercase text-slate-500 dark:text-slate-400">1. Elegí tu medio de pago:</p>
+        <p class="font-bold text-slate-500 dark:text-slate-400">1. Elegí tu medio de pago:</p>
         <div class="flex items-center justify-between bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
           <div>
             <span class="text-slate-500 dark:text-slate-400 block">Alias Transferencia (5% OFF):</span>
@@ -582,9 +578,9 @@
       </div>
 
       <form onsubmit="verifyAccessCode(event)" class="space-y-3">
-        <label class="block text-xs font-bold uppercase text-slate-500 dark:text-slate-400">2. Ingresá tu código personal e intransferible:</label>
+        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400">2. Ingresá tu código personal e intransferible:</label>
         <div class="flex gap-2">
-          <input type="text" id="access-code-input" placeholder="Ej: MP-JUAN-XXXX-XXXX" required class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono font-bold uppercase text-sm" />
+          <input type="text" id="access-code-input" placeholder="Ej: MP-JUAN-XXXX-XXXX" required class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono font-bold text-sm" />
           <button type="submit" class="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow">Activar</button>
         </div>
         <p id="access-code-msg" class="text-xs font-semibold hidden"></p>
@@ -656,7 +652,7 @@
         </div>
 
         <hr class="border-slate-100 dark:border-slate-800" />
-        <p class="text-xs font-extrabold uppercase text-brand-600">Datos del Dueño (Para el QR)</p>
+        <p class="text-xs font-extrabold text-brand-600">Datos del Dueño (Para el QR)</p>
 
         <div class="grid grid-cols-2 gap-3">
           <div>
@@ -866,33 +862,38 @@
     let weightChartInstance = null;
     let tempPhotoBase64 = "";
 
+    async function callLicense(code, check) {
+      const k = COMMERCIAL_CONFIG.supabaseAnonKey;
+      const res = await fetch(`${COMMERCIAL_CONFIG.supabaseUrl}/functions/v1/redeem-code`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "apikey": k, "Authorization": "Bearer " + k },
+        body: JSON.stringify({ code, device: CURRENT_DEVICE_SIG, check })
+      });
+      return res.json();
+    }
+
     function validateLicenseIntegrity() {
-      if (isDemoPreview) {
-        state.isPro = false;
-        state.isAdmin = false;
-        return;
-      }
-      if (state.isAdmin) {
-        if (localStorage.getItem("mascotapro_admin_ok") === "1" && state.activatedCode === COMMERCIAL_CONFIG.adminMasterCode) return;
-        state.isAdmin = false; state.isPro = false; state.activatedCode = null; state.boundDeviceSig = null;
-        saveState();
-        return;
-      }
-      if (state.isPro) {
-        const isRevoked = state.activatedCode && (COMMERCIAL_CONFIG.revokedCodes || []).includes(state.activatedCode);
-        const deviceMismatch = state.boundDeviceSig && state.boundDeviceSig !== CURRENT_DEVICE_SIG;
-        if (isRevoked || deviceMismatch) {
-          state.isPro = false;
-          state.activatedCode = null;
-          state.boundDeviceSig = null;
-          saveState();
-        }
+      state.isAdmin = false;
+      if (isDemoPreview) { state.isPro = false; return; }
+      if (state.isPro && !state.activatedCode) { state.isPro = false; return; }
+      if (state.isPro && COMMERCIAL_CONFIG.supabaseUrl && navigator.onLine) {
+        callLicense(state.activatedCode, true).then(r => {
+          if (r && r.ok === false && ["revoked", "used", "invalid"].includes(r.reason)) {
+            state.isPro = false; state.activatedCode = null; state.boundDeviceSig = null;
+            saveState();
+            showToast("Tu licencia ya no está activa.");
+          }
+        }).catch(() => {});
       }
     }
 
     function saveState() {
       localStorage.setItem("mascotapro_state_pro_v1", JSON.stringify(state));
       renderAll();
+    }
+
+    function emptyState(icon, text, cta, fn) {
+      return `<div class="flex flex-col items-center text-center gap-3 py-8"><span class="w-12 h-12 rounded-2xl bg-brand-50 dark:bg-slate-800 text-brand-700 dark:text-brand-300 flex items-center justify-center"><i data-lucide="${icon}" class="w-6 h-6"></i></span><p class="text-sm text-slate-600 dark:text-slate-300 max-w-xs">${text}</p><button onclick="${fn}" class="no-print px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold">${cta}</button></div>`;
     }
 
     function esc(v) {
@@ -1158,7 +1159,7 @@
       if (vNext) vNext.textContent = _over[0] ? `Vencido: ${_over[0].name} (${_over[0].next})` : _up ? `Próximo refuerzo: ${_up.name} (${_up.next})` : "Sin refuerzos pendientes";
 
       if (!vList.length) {
-        list.innerHTML = `<p class="text-sm text-slate-500 dark:text-slate-400 text-center py-6">Aún no hay vacunas registradas.</p>`;
+        list.innerHTML = `${emptyState("syringe","Aún no hay vacunas registradas.","Registrar aplicación","openVaccineModal()")}`;
         return;
       }
 
@@ -1171,7 +1172,7 @@
             <p class="text-xs text-slate-500 mt-0.5">Aplicada: ${esc(v.date)} ${v.next ? `• Próxima: <strong>${esc(v.next)}</strong>` : ''}</p>
           </div>
           <div class="flex items-center gap-3">
-            <button onclick="deleteItem('vaccines', '${esc(v.id)}')" class="text-slate-500 dark:text-slate-400 hover:text-rose-500 no-print"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            <button aria-label="Eliminar registro" onclick="deleteItem('vaccines', '${esc(v.id)}')" class="text-slate-500 dark:text-slate-400 hover:text-rose-500 no-print p-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
           </div>
         </div>
       `).join("");
@@ -1236,9 +1237,9 @@
             <h4 class="font-bold text-sm">${esc(v.reason)}</h4>
             <p class="text-xs text-slate-500 mt-1">${esc(v.notes)}</p>
           </div>
-          <button onclick="deleteItem('visits', '${esc(v.id)}')" class="text-slate-500 dark:text-slate-400 hover:text-rose-500 no-print"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+          <button aria-label="Eliminar registro" onclick="deleteItem('visits', '${esc(v.id)}')" class="text-slate-500 dark:text-slate-400 hover:text-rose-500 no-print p-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
         </div>
-      `).join("") : `<p class="text-sm text-slate-500 dark:text-slate-400 text-center py-6">Sin consultas veterinarias registradas.</p>`;
+      `).join("") : `${emptyState("stethoscope","Sin consultas veterinarias registradas.","Nueva consulta","openVisitModal()")}`;
     }
 
     function renderExpenses(pet) {
@@ -1266,10 +1267,10 @@
           </div>
           <div class="flex items-center gap-3">
             <span class="font-extrabold text-sm">$${Number(e.amount).toLocaleString("es-AR")}</span>
-            <button onclick="deleteItem('expenses', '${esc(e.id)}')" class="text-slate-500 dark:text-slate-400 hover:text-rose-500 no-print"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            <button aria-label="Eliminar registro" onclick="deleteItem('expenses', '${esc(e.id)}')" class="text-slate-500 dark:text-slate-400 hover:text-rose-500 no-print p-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
           </div>
         </div>
-      `).join("") : `<p class="text-sm text-slate-500 dark:text-slate-400 text-center py-6">Sin gastos registrados.</p>`;
+      `).join("") : `${emptyState("wallet","Sin gastos registrados.","Registrar gasto","openExpenseModal()")}`;
     }
 
     function deleteItem(collection, id) {
@@ -1514,68 +1515,27 @@
       return parts[3] === expectedChecksum;
     }
 
-    function verifyAccessCode(e) {
+    async function verifyAccessCode(e) {
       e.preventDefault();
-      const inputEl = document.getElementById("access-code-input");
-      if (!inputEl) return;
-      const input = inputEl.value.trim().toUpperCase();
+      const input = document.getElementById("access-code-input").value.trim().toUpperCase();
       const msg = document.getElementById("access-code-msg");
-      const usedCodes = JSON.parse(localStorage.getItem("mascotapro_used_codes") || "[]");
-
-      if ((COMMERCIAL_CONFIG.revokedCodes || []).includes(input)) {
-        if (msg) {
-          msg.textContent = "Este código fue anulado.";
-          msg.className = "text-xs font-bold text-rose-500 block";
+      const say = (t, ok) => { if (!msg) return; msg.textContent = t; msg.className = "text-xs font-bold block " + (ok ? "text-emerald-700" : "text-rose-600"); };
+      if (!input) return;
+      if (!COMMERCIAL_CONFIG.supabaseUrl) { say("La activación no está disponible por ahora.", false); return; }
+      say("Verificando…", true);
+      try {
+        const r = await callLicense(input, false);
+        if (r.ok) {
+          state.isPro = true; state.isAdmin = false;
+          state.boundDeviceSig = CURRENT_DEVICE_SIG; state.activatedCode = input;
+          saveState();
+          say("¡Licencia activada!", true);
+          showToast("¡MascotaPro PRO activado!");
+          setTimeout(() => closeModal("modal-unlock"), 1200);
+        } else {
+          say({ revoked: "Este código fue anulado.", used: "Este código ya está en uso en otro dispositivo.", invalid: "Código inválido." }[r.reason] || "No se pudo verificar. Probá de nuevo.", false);
         }
-        return;
-      }
-
-      if (input === COMMERCIAL_CONFIG.adminMasterCode) {
-        localStorage.setItem("mascotapro_admin_ok", "1");
-        state.isPro = true;
-        state.isAdmin = true;
-        state.boundDeviceSig = CURRENT_DEVICE_SIG;
-        state.activatedCode = input;
-        saveState();
-        if (msg) {
-          msg.textContent = "¡Modo Administrador PRO activado!";
-          msg.className = "text-xs font-bold text-emerald-600 block";
-        }
-        showToast("¡Bienvenido Administrador PRO!");
-        setTimeout(() => closeModal("modal-unlock"), 1200);
-        return;
-      }
-
-      if (usedCodes.includes(input) && state.activatedCode !== input) {
-        if (msg) {
-          msg.textContent = "Este código ya fue utilizado.";
-          msg.className = "text-xs font-bold text-rose-500 block";
-        }
-        return;
-      }
-
-      if (isValidUniqueClientCode(input) || COMMERCIAL_CONFIG.validCodes.includes(input)) {
-        state.isPro = true;
-        state.isAdmin = false;
-        state.boundDeviceSig = CURRENT_DEVICE_SIG;
-        state.activatedCode = input;
-        if (!usedCodes.includes(input)) {
-          usedCodes.push(input);
-          localStorage.setItem("mascotapro_used_codes", JSON.stringify(usedCodes));
-        }
-        saveState();
-        if (msg) {
-          msg.textContent = "¡Licencia personal activada!";
-          msg.className = "text-xs font-bold text-emerald-600 block";
-        }
-        showToast("¡MascotaPro PRO activado!");
-        setTimeout(() => closeModal("modal-unlock"), 1200);
-      } else {
-        if (msg) {
-          msg.textContent = "Código inválido.";
-          msg.className = "text-xs font-bold text-rose-500 block";
-        }
-      }
+      } catch { say("Sin conexión. Conectate a internet para activar.", false); }
     }
 
     let deferredInstallPrompt = null;
@@ -1658,6 +1618,10 @@
       };
       reader.readAsText(file);
     }
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") ["modal-pet", "modal-vaccine", "modal-visit", "modal-expense", "modal-unlock", "modal-admin-licenses"].forEach(closeModal);
+    });
 
     window.addEventListener("DOMContentLoaded", () => {
       try {
