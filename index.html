@@ -7,6 +7,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="MascotaPro" />
+  <link id="pwa-manifest-link" rel="manifest" href="./manifest.json" />
+  <link id="apple-touch-icon-link" rel="apple-touch-icon" />
   <title>MascotaPro — Salud y Placa QR Inteligente</title>
 
   <!-- Tailwind CSS -->
@@ -64,23 +66,53 @@
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-200 min-h-screen flex flex-col md:flex-row">
 
   <!-- =====================================================================
-       CONFIGURACIÓN COMERCIAL (EDITÁ SOLO ESTAS LÍNEAS CON TUS DATOS)
+       CONFIGURACIÓN COMERCIAL Y ACTUALIZACIÓN REMOTA (100% GRATUITA)
        ===================================================================== -->
   <script>
+    const APP_VERSION = "2.1.0"; // Incrementá este número cada vez que subas mejoras a GitHub
+
     const COMMERCIAL_CONFIG = {
       appName: "MascotaPro",
-      priceText: "$9.999 ARS (Pago Único)",
-      whatsappNumber: "5493580000000", // Poné tu WhatsApp con código de país (sin + ni espacios)
-      mpLink: "https://mpago.la/TU_LINK_AQUI", // Poné tu link de pago de Mercado Pago
-      bankAlias: "TU.ALIAS.MP", // Poné tu Alias bancario o de billetera virtual
+      priceText: "$9.999 ARS",
+      transferDiscountText: "5% OFF pagando por transferencia ($9.499 ARS)",
+      whatsappNumber: "5493580000000", // Tu WhatsApp con código de país (sin + ni espacios)
+      mpLink: "https://mpago.la/TU_LINK_AQUI", // Tu link de pago de Mercado Pago
+      bankAlias: "TU.ALIAS.MP", // Tu Alias bancario o de billetera virtual
+      // Opcional: URL gratuita de un archivo JSON en tu GitHub (raw.githubusercontent.com)
+      // para cambiar precios, alias o códigos en todas las apps sin tocar el HTML
+      remoteConfigUrl: "",
+      adminMasterCode: "ADMIN2026", // Tu clave maestra de creador/administrador
+      licenseSecretSalt: "MASCOTAPRO_RIO4_2026_SECURE", // Firma criptográfica única (no cambiar después de vender)
+      // Códigos individuales extra o revocados (100% gratuito)
       validCodes: [
         "MASCOTA2026",
-        "PRO2026",
-        "HUELLAS100",
-        "VIPMASCOTA"
-      ]
+        "PRO2026"
+      ],
+      revokedCodes: [] // Si querés anular un código vendido, agregalo acá
     };
   </script>
+
+  <!-- BANNER DE ACTUALIZACIÓN AUTOMÁTICA SIN REINSTALAR -->
+  <div id="update-banner" class="hidden fixed bottom-16 md:bottom-5 left-4 right-4 md:left-auto md:right-6 md:max-w-sm z-50 bg-brand-700 text-white p-4 rounded-2xl shadow-2xl border border-brand-500 flex items-center justify-between gap-3 no-print">
+    <div class="flex items-center gap-2.5 text-xs">
+      <i data-lucide="sparkles" class="w-5 h-5 text-amber-300 shrink-0"></i>
+      <div>
+        <p class="font-extrabold">¡Nueva mejora disponible!</p>
+        <p class="text-brand-100">Actualizá al instante sin perder tus datos.</p>
+      </div>
+    </div>
+    <button onclick="applyLiveUpdate()" class="px-3 py-1.5 rounded-xl bg-white text-brand-800 font-extrabold text-xs shrink-0 shadow hover:bg-brand-50 transition">
+      Actualizar
+    </button>
+  </div>
+
+  <!-- TOAST DE NOTIFICACIÓN (Reemplaza cualquier alert()) -->
+  <div id="toast-notification" class="fixed top-4 right-4 z-50 transform translate-y-[-150%] opacity-0 transition-all duration-300 pointer-events-none no-print">
+    <div class="bg-slate-900 dark:bg-slate-800 text-white px-4 py-3 rounded-2xl shadow-xl border border-slate-700 flex items-center gap-2.5 text-xs font-bold">
+      <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
+      <span id="toast-text">Acción completada</span>
+    </div>
+  </div>
 
   <!-- SIDEBAR DESKTOP -->
   <aside class="hidden md:flex md:w-72 md:flex-col md:fixed md:inset-y-0 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 z-30 no-print">
@@ -91,7 +123,10 @@
         </div>
         <div>
           <h1 class="font-extrabold text-lg tracking-tight text-slate-900 dark:text-white">Mascota<span class="text-brand-600">Pro</span></h1>
-          <span id="pro-badge-desktop" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">Versión Demo</span>
+          <div class="flex items-center gap-1.5 mt-0.5">
+            <span id="pro-badge-desktop" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">Licencia PRO Activa</span>
+            <span class="text-[10px] text-slate-400 font-semibold">v2.1</span>
+          </div>
         </div>
       </div>
       <button onclick="toggleDarkMode()" title="Cambiar tema" class="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800">
@@ -130,16 +165,28 @@
       </button>
     </nav>
 
-    <!-- Banner PRO / Respaldo -->
-    <div class="p-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
-      <button id="unlock-cta-desktop" onclick="openUnlockModal()" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-xs shadow-md hover:opacity-95 flex items-center justify-center gap-2">
-        <i data-lucide="crown" class="w-4 h-4"></i> Activar Versión Completa
+    <!-- Respaldo Local y Licencia PRO -->
+    <div class="p-4 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
+      <button id="admin-panel-btn-desktop" onclick="openAdminLicenseModal()" class="hidden w-full py-2 px-3 rounded-xl bg-slate-900 dark:bg-slate-800 text-amber-400 border border-amber-500/30 font-bold text-xs shadow-sm hover:bg-slate-800 flex items-center justify-center gap-2 transition">
+        <i data-lucide="key-round" class="w-3.5 h-3.5"></i> Generar Código Cliente
       </button>
+      <button id="install-app-btn-desktop" onclick="triggerInstallApp()" class="w-full py-2 px-3 rounded-xl bg-brand-600 text-white font-bold text-xs shadow-sm hover:bg-brand-700 flex items-center justify-center gap-2 transition">
+        <i data-lucide="smartphone" class="w-3.5 h-3.5"></i> Instalar App en Celular
+      </button>
+      <button id="unlock-cta-desktop" onclick="openUnlockModal()" class="hidden w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-xs shadow-md hover:opacity-95 flex items-center justify-center gap-2 transition">
+        <i data-lucide="crown" class="w-4 h-4"></i> Activar Versión PRO
+      </button>
+      <div class="flex items-center justify-between">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Copia de Seguridad</span>
+        <button onclick="checkLiveUpdates(true)" title="Buscar actualizaciones" class="text-[11px] font-bold text-brand-600 hover:underline flex items-center gap-1">
+          <i data-lucide="refresh-cw" class="w-3 h-3"></i> Actualizar
+        </button>
+      </div>
       <div class="flex gap-2">
-        <button onclick="exportBackup()" class="flex-1 py-2 px-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center gap-1">
+        <button onclick="exportBackup()" class="flex-1 py-2 px-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center gap-1">
           <i data-lucide="download" class="w-3.5 h-3.5"></i> Respaldo
         </button>
-        <label class="flex-1 py-2 px-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center gap-1 cursor-pointer">
+        <label class="flex-1 py-2 px-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center gap-1 cursor-pointer">
           <i data-lucide="upload" class="w-3.5 h-3.5"></i> Restaurar
           <input type="file" accept=".json" onchange="importBackup(event)" class="hidden" />
         </label>
@@ -155,14 +202,26 @@
       </div>
       <div>
         <h1 class="font-extrabold text-base leading-none text-slate-900 dark:text-white">Mascota<span class="text-brand-600">Pro</span></h1>
-        <span id="pro-badge-mobile" class="text-[10px] font-bold text-amber-600 dark:text-amber-400">Modo Demo</span>
+        <span id="pro-badge-mobile" class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">PRO Activo • v2.1</span>
       </div>
     </div>
     <div class="flex items-center gap-2">
-      <button id="unlock-cta-mobile" onclick="openUnlockModal()" class="px-2.5 py-1.5 rounded-lg bg-amber-500 text-white text-xs font-bold flex items-center gap-1">
+      <button id="install-app-btn-mobile" onclick="triggerInstallApp()" title="Instalar en celular" class="px-2.5 py-1.5 rounded-lg bg-brand-600 text-white text-xs font-bold flex items-center gap-1 shadow-sm">
+        <i data-lucide="download" class="w-3.5 h-3.5"></i> Instalar
+      </button>
+      <button id="admin-panel-btn-mobile" onclick="openAdminLicenseModal()" title="Generar código único" class="hidden px-2.5 py-1.5 rounded-lg bg-slate-900 text-amber-400 border border-amber-500/40 text-xs font-bold flex items-center gap-1">
+        <i data-lucide="key-round" class="w-3.5 h-3.5"></i> Códigos
+      </button>
+      <button id="unlock-cta-mobile" onclick="openUnlockModal()" class="hidden px-2.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold flex items-center gap-1 shadow-sm">
         <i data-lucide="crown" class="w-3.5 h-3.5"></i> PRO
       </button>
-      <button onclick="toggleDarkMode()" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+      <button onclick="checkLiveUpdates(true)" title="Buscar actualizaciones" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-brand-600 dark:text-brand-400">
+        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+      </button>
+      <button onclick="exportBackup()" title="Guardar respaldo" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+        <i data-lucide="download" class="w-4 h-4"></i>
+      </button>
+      <button onclick="toggleDarkMode()" title="Cambiar tema" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
         <i data-lucide="moon" class="w-4 h-4 dark:hidden"></i>
         <i data-lucide="sun" class="w-4 h-4 hidden dark:block text-amber-400"></i>
       </button>
@@ -188,7 +247,7 @@
             <img id="profile-photo" src="" alt="Mascota" class="w-28 h-28 rounded-2xl object-cover border-4 border-brand-50 dark:border-slate-800 shadow-md bg-slate-100" />
             <span id="profile-species-badge" class="absolute -bottom-2 -right-2 px-2.5 py-0.5 rounded-full text-xs font-bold bg-brand-600 text-white shadow">Perro</span>
           </div>
-          <div class="flex-1 text-center sm:text-left space-y-2">
+          <div class="flex-1 text-center sm:text-left space-y-2 w-full">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <h2 id="profile-name" class="text-2xl font-extrabold text-slate-900 dark:text-white">Toby</h2>
@@ -272,7 +331,7 @@
 
             <div class="flex flex-wrap justify-center gap-3 pt-2 w-full no-print">
               <button onclick="downloadQRTag()" class="flex-1 min-w-[160px] py-2.5 px-4 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-lg shadow-brand-600/20 flex items-center justify-center gap-2">
-                <i data-lucide="download" class="w-4 h-4"></i> Descargar Placa
+                <i data-lucide="download" class="w-4 h-4"></i> Descargar Placa PNG
               </button>
               <button onclick="window.print()" class="py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center gap-2">
                 <i data-lucide="printer" class="w-4 h-4"></i> Imprimir
@@ -414,9 +473,59 @@
 
   <!-- ================= MODALES ================= -->
 
+  <!-- MODAL GENERADOR DE LICENCIAS ÚNICAS (SOLO ADMIN) -->
+  <div id="modal-admin-licenses" class="fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-50 hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4 my-auto">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2 text-amber-500">
+          <i data-lucide="shield-alert" class="w-6 h-6"></i>
+          <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Generador de Códigos Únicos</h3>
+        </div>
+        <button onclick="closeModal('modal-admin-licenses')" class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-600 dark:text-slate-300">
+        Creá un código exclusivo e intransferible para cada cliente. Al activarlo, queda <strong>vinculado únicamente a su celular/PC</strong> y no puede compartirse con nadie.
+      </p>
+
+      <form onsubmit="generateUniqueClientCode(event)" class="space-y-3 text-sm">
+        <div>
+          <label class="text-xs font-bold text-slate-500">Nombre o Teléfono del Cliente *</label>
+          <input type="text" id="client-ref-input" required placeholder="Ej: Juan Perez 3584123456" class="w-full mt-1 px-3.5 py-2.5 rounded-xl border dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-semibold" />
+        </div>
+        <button type="submit" class="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow">
+          Generar Código Único Intransferible
+        </button>
+      </form>
+
+      <div id="generated-code-box" class="hidden p-4 rounded-2xl bg-slate-950 text-white space-y-2.5 border border-amber-500/40">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] uppercase font-bold text-amber-400">Código Único Generado:</span>
+          <span class="text-[10px] text-slate-400">1 Dispositivo</span>
+        </div>
+        <p id="generated-code-value" class="font-mono text-base font-extrabold tracking-wider text-emerald-400 select-all break-all">MP-XXXX-XXXX</p>
+        <div class="flex gap-2 pt-1">
+          <button type="button" onclick="copyGeneratedCode()" class="flex-1 py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold flex items-center justify-center gap-1.5">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copiar Código
+          </button>
+          <a id="send-code-wa-btn" href="#" target="_blank" class="flex-1 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-xs font-bold flex items-center justify-center gap-1.5">
+            <i data-lucide="send" class="w-3.5 h-3.5"></i> Enviar por WA
+          </a>
+        </div>
+      </div>
+
+      <div class="pt-1 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+        <span>Modo Vista Previa Cliente:</span>
+        <a href="?demo=1" class="font-bold text-brand-600 hover:underline">Simular pantalla de compra →</a>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL DESBLOQUEO / LICENCIA PRO -->
-  <div id="modal-unlock" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-5">
+  <div id="modal-unlock" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-5 my-auto">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2 text-amber-500">
           <i data-lucide="crown" class="w-6 h-6"></i>
@@ -427,34 +536,40 @@
         </button>
       </div>
 
-      <p class="text-sm text-slate-600 dark:text-slate-300">
-        La versión gratuita permite gestionar <strong>1 mascota</strong>. Activá la licencia completa (<span id="modal-price-text" class="font-bold text-brand-600"></span>) para registrar mascotas ilimitadas de por vida sin abonos mensuales.
-      </p>
+      <div class="space-y-1.5">
+        <p class="text-sm text-slate-600 dark:text-slate-300">
+          La versión gratuita permite gestionar <strong>1 mascota</strong>. Activá la licencia completa por un pago único de <span id="modal-price-text" class="font-extrabold text-brand-600"></span> y registrá mascotas ilimitadas para siempre.
+        </p>
+        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
+          <i data-lucide="badge-percent" class="w-3.5 h-3.5"></i>
+          <span id="modal-discount-text">5% OFF pagando por transferencia ($9.499 ARS)</span>
+        </div>
+      </div>
 
       <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl space-y-3 text-xs">
-        <p class="font-bold uppercase text-slate-400">1. Realizá tu pago único:</p>
+        <p class="font-bold uppercase text-slate-400">1. Elegí tu medio de pago:</p>
         <div class="flex items-center justify-between bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
           <div>
-            <span class="text-slate-400 block">Alias Transferencia:</span>
+            <span class="text-slate-400 block">Alias Transferencia (5% OFF):</span>
             <strong id="modal-bank-alias" class="text-sm select-all">TU.ALIAS.MP</strong>
           </div>
-          <button onclick="copyAlias()" class="px-2.5 py-1.5 rounded-lg bg-brand-50 dark:bg-brand-900/40 text-brand-600 dark:text-brand-300 font-bold">Copiar</button>
+          <button type="button" onclick="copyAlias()" class="px-3 py-1.5 rounded-lg bg-brand-50 dark:bg-brand-900/40 text-brand-600 dark:text-brand-300 font-bold hover:bg-brand-100 transition">Copiar</button>
         </div>
         <div class="grid grid-cols-2 gap-2">
-          <a id="modal-mp-btn" href="#" target="_blank" class="py-2.5 px-3 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-center flex items-center justify-center gap-1.5">
+          <a id="modal-mp-btn" href="#" target="_blank" class="py-2.5 px-3 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-center flex items-center justify-center gap-1.5 shadow-sm">
             <i data-lucide="credit-card" class="w-4 h-4"></i> Mercado Pago
           </a>
-          <a id="modal-wa-btn" href="#" target="_blank" class="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-center flex items-center justify-center gap-1.5">
+          <a id="modal-wa-btn" href="#" target="_blank" class="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-center flex items-center justify-center gap-1.5 shadow-sm">
             <i data-lucide="send" class="w-4 h-4"></i> Enviar Comprobante
           </a>
         </div>
       </div>
 
       <form onsubmit="verifyAccessCode(event)" class="space-y-3">
-        <label class="block text-xs font-bold uppercase text-slate-400">2. Ingresá tu código de activación:</label>
+        <label class="block text-xs font-bold uppercase text-slate-400">2. Ingresá tu código personal e intransferible:</label>
         <div class="flex gap-2">
-          <input type="text" id="access-code-input" placeholder="Ej: MASCOTA2026" required class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-bold uppercase text-sm" />
-          <button type="submit" class="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm">Activar</button>
+          <input type="text" id="access-code-input" placeholder="Ej: MP-JUAN-XXXX-XXXX" required class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-mono font-bold uppercase text-sm" />
+          <button type="submit" class="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow">Activar</button>
         </div>
         <p id="access-code-msg" class="text-xs font-semibold hidden"></p>
       </form>
@@ -651,8 +766,47 @@
   <script>
     const DEFAULT_AVATAR = "data:image/svg+xml;utf8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect width="200" height="200" fill="#ccfbf1"/><circle cx="100" cy="85" r="38" fill="#0d9488"/><path d="M45 175c0-32 25-52 55-52s55 20 55 52" fill="#0d9488"/></svg>`);
 
+    // Permite activar modo cliente (?demo=1) para probar cómo lo ven los compradores nuevos,
+    // mientras que por defecto para vos abre 100% PRO ilimitado.
+    const urlParams = new URLSearchParams(window.location.search);
+    const isDemoPreview = urlParams.get("demo") === "1";
+
+    // Huella única del dispositivo para impedir que un cliente comparta su código o respaldo en otro teléfono
+    function getDeviceFingerprint() {
+      let hwId = localStorage.getItem("mascotapro_hw_id");
+      if (!hwId) {
+        hwId = "DEV-" + Math.random().toString(36).substring(2, 10).toUpperCase() + "-" + Date.now().toString(36).toUpperCase();
+        localStorage.setItem("mascotapro_hw_id", hwId);
+      }
+      const rawSig = [
+        hwId,
+        navigator.platform || "",
+        screen.width + "x" + screen.height,
+        Intl.DateTimeFormat().resolvedOptions().timeZone || ""
+      ].join("|");
+      return computeSignature(rawSig);
+    }
+
+    function computeSignature(text) {
+      let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+      const full = text + "::" + COMMERCIAL_CONFIG.licenseSecretSalt;
+      for (let i = 0; i < full.length; i++) {
+        const ch = full.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
+      }
+      h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+      h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+      return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36).toUpperCase();
+    }
+
+    const CURRENT_DEVICE_SIG = getDeviceFingerprint();
+
     const INITIAL_STATE = {
       isPro: false,
+      isAdmin: false,
+      boundDeviceSig: null,
+      activatedCode: null,
       activePetId: "pet-1",
       pets: [
         {
@@ -690,17 +844,51 @@
       ]
     };
 
-    let state = JSON.parse(localStorage.getItem("mascotapro_state_v2")) || INITIAL_STATE;
+    let state = JSON.parse(localStorage.getItem("mascotapro_state_pro_v1")) || INITIAL_STATE;
     let weightChartInstance = null;
     let tempPhotoBase64 = "";
 
+    // Verificación antipiratería al iniciar: si el código está revocado o fue copiado desde otro dispositivo, se bloquea
+    function validateLicenseIntegrity() {
+      if (isDemoPreview) {
+        state.isPro = false;
+        state.isAdmin = false;
+        return;
+      }
+      if (state.isAdmin) return;
+      if (state.isPro) {
+        const isRevoked = state.activatedCode && (COMMERCIAL_CONFIG.revokedCodes || []).includes(state.activatedCode);
+        const deviceMismatch = state.boundDeviceSig && state.boundDeviceSig !== CURRENT_DEVICE_SIG;
+        if (isRevoked || deviceMismatch) {
+          state.isPro = false;
+          state.activatedCode = null;
+          state.boundDeviceSig = null;
+          saveState();
+        }
+      }
+    }
+
     function saveState() {
-      localStorage.setItem("mascotapro_state_v2", JSON.stringify(state));
+      localStorage.setItem("mascotapro_state_pro_v1", JSON.stringify(state));
       renderAll();
     }
 
     function getActivePet() {
       return state.pets.find(p => p.id === state.activePetId) || state.pets[0];
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast-notification");
+      const textEl = document.getElementById("toast-text");
+      if (!toast || !textEl) return;
+      textEl.textContent = message;
+      toast.classList.remove("translate-y-[-150%]", "opacity-0");
+      toast.classList.add("translate-y-0", "opacity-100");
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => {
+        toast.classList.add("translate-y-[-150%]", "opacity-0");
+        toast.classList.remove("translate-y-0", "opacity-100");
+      }, 2800);
     }
 
     // MODO OSCURO
@@ -709,6 +897,7 @@
         document.documentElement.classList.add("dark");
       }
     }
+
     function toggleDarkMode() {
       const isDark = document.documentElement.classList.toggle("dark");
       localStorage.setItem("mascotapro_dark", isDark);
@@ -743,15 +932,36 @@
       const pet = getActivePet();
       if (!pet) return;
 
-      // Badges PRO
+      // Estado de Licencia PRO
       const proBadgeD = document.getElementById("pro-badge-desktop");
       const proBadgeM = document.getElementById("pro-badge-mobile");
+      const unlockCtaD = document.getElementById("unlock-cta-desktop");
+      const unlockCtaM = document.getElementById("unlock-cta-mobile");
+      const adminBtnD = document.getElementById("admin-panel-btn-desktop");
+      const adminBtnM = document.getElementById("admin-panel-btn-mobile");
+
+      if (state.isAdmin) {
+        adminBtnD.classList.remove("hidden");
+        adminBtnM.classList.remove("hidden");
+      } else {
+        adminBtnD.classList.add("hidden");
+        adminBtnM.classList.add("hidden");
+      }
+
       if (state.isPro) {
-        proBadgeD.textContent = "Licencia PRO Activa";
+        proBadgeD.textContent = state.isAdmin ? "Admin PRO Activo" : "Licencia Personal Activa";
         proBadgeD.className = "text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300";
-        proBadgeM.textContent = "PRO Activo";
-        document.getElementById("unlock-cta-desktop").classList.add("hidden");
-        document.getElementById("unlock-cta-mobile").classList.add("hidden");
+        proBadgeM.textContent = state.isAdmin ? "Admin PRO" : "PRO Personal";
+        proBadgeM.className = "text-[10px] font-bold text-emerald-600 dark:text-emerald-400";
+        unlockCtaD.classList.add("hidden");
+        unlockCtaM.classList.add("hidden");
+      } else {
+        proBadgeD.textContent = "Versión Gratuita";
+        proBadgeD.className = "text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300";
+        proBadgeM.textContent = "Versión Gratuita";
+        proBadgeM.className = "text-[10px] font-bold text-amber-600 dark:text-amber-400";
+        unlockCtaD.classList.remove("hidden");
+        unlockCtaM.classList.remove("hidden");
       }
 
       // Listas de mascotas
@@ -822,15 +1032,36 @@
       if (!container) return;
       container.innerHTML = "";
       const pet = getActivePet();
-      const qrText = `MASCOTA PERDIDA: ${pet.name} (${pet.species})\nDUEÑO: ${pet.owner}\nTEL: ${pet.phone}\nZONA: ${pet.address || '-'}\nNOTAS: ${pet.notes || 'Ninguna'}`;
-      new QRCode(container, {
-        text: qrText,
-        width: 180,
-        height: 180,
-        colorDark: "#0f172a",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.M
-      });
+      const rawText = [
+        `MASCOTA PERDIDA: ${(pet.name || "").slice(0, 30)} (${(pet.species || "").slice(0, 15)})`,
+        `DUEÑO: ${(pet.owner || "").slice(0, 35)}`,
+        `TEL: ${(pet.phone || "").slice(0, 25)}`,
+        `ZONA: ${(pet.address || "-").slice(0, 45)}`,
+        `NOTAS: ${(pet.notes || "Ninguna").slice(0, 70)}`
+      ].join("\n");
+      const qrText = rawText.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+      try {
+        new QRCode(container, {
+          text: qrText,
+          width: 180,
+          height: 180,
+          colorDark: "#0f172a",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.L
+        });
+      } catch (err) {
+        console.warn("Reintentando QR compacto:", err);
+        container.innerHTML = "";
+        new QRCode(container, {
+          text: `MASCOTA: ${pet.name}\nTEL: ${pet.phone}`,
+          width: 180,
+          height: 180,
+          colorDark: "#0f172a",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.L
+        });
+      }
     }
 
     function downloadQRTag() {
@@ -870,6 +1101,7 @@
       link.download = `Placa-QR-${pet.name}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
+      showToast(`Placa QR de ${pet.name} descargada`);
     }
 
     // VACUNAS Y CALENDARIO GOOGLE
@@ -958,6 +1190,7 @@
       document.getElementById("new-weight-val").value = "";
       saveState();
       renderWeightChart();
+      showToast("Nuevo peso registrado");
     }
 
     // CONSULTAS Y GASTOS
@@ -1007,9 +1240,10 @@
       const pet = getActivePet();
       pet[collection] = pet[collection].filter(item => item.id !== id);
       saveState();
+      showToast("Registro eliminado");
     }
 
-    // MODALES Y CRUD MASCOTAS
+    // MODALES Y CRUD MASCOTAS (100% ILIMITADO)
     function openModal(id) {
       const el = document.getElementById(id);
       el.classList.remove("hidden");
@@ -1088,10 +1322,12 @@
       if (id) {
         const idx = state.pets.findIndex(p => p.id === id);
         state.pets[idx] = { ...state.pets[idx], ...data };
+        showToast("Ficha actualizada");
       } else {
         const newId = "pet-" + Date.now();
         state.pets.push({ id: newId, ...data, weights: [], vaccines: [], visits: [], expenses: [] });
         state.activePetId = newId;
+        showToast("¡Nueva mascota agregada!");
       }
       closeModal("modal-pet");
       saveState();
@@ -1103,6 +1339,7 @@
       state.activePetId = state.pets[0].id;
       closeModal("modal-pet");
       saveState();
+      showToast("Mascota eliminada");
     }
 
     function openVaccineModal() { openModal("modal-vaccine"); }
@@ -1117,6 +1354,7 @@
       e.target.reset();
       closeModal("modal-vaccine");
       saveState();
+      showToast("Vacuna registrada");
     }
 
     function openVisitModal() { openModal("modal-visit"); }
@@ -1131,6 +1369,7 @@
       e.target.reset();
       closeModal("modal-visit");
       saveState();
+      showToast("Consulta agregada");
     }
 
     function openExpenseModal() { openModal("modal-expense"); }
@@ -1146,47 +1385,240 @@
       e.target.reset();
       closeModal("modal-expense");
       saveState();
+      showToast("Gasto registrado");
     }
 
-    // SISTEMA COMERCIAL DE DESBLOQUEO
+    // SISTEMA COMERCIAL DE DESBLOQUEO PRO
     function openUnlockModal() {
       document.getElementById("modal-price-text").textContent = COMMERCIAL_CONFIG.priceText;
+      document.getElementById("modal-discount-text").textContent = COMMERCIAL_CONFIG.transferDiscountText;
       document.getElementById("modal-bank-alias").textContent = COMMERCIAL_CONFIG.bankAlias;
       document.getElementById("modal-mp-btn").href = COMMERCIAL_CONFIG.mpLink;
-      const waText = encodeURIComponent(`Hola! Te envío el comprobante de pago para activar ${COMMERCIAL_CONFIG.appName} PRO.`);
+      const waText = encodeURIComponent(`¡Hola! Te envío el comprobante de pago para activar ${COMMERCIAL_CONFIG.appName} PRO.`);
       document.getElementById("modal-wa-btn").href = `https://wa.me/${COMMERCIAL_CONFIG.whatsappNumber}?text=${waText}`;
+      document.getElementById("access-code-msg").classList.add("hidden");
       openModal("modal-unlock");
     }
 
     function copyAlias() {
-      navigator.clipboard.writeText(COMMERCIAL_CONFIG.bankAlias);
-      alert("Alias copiado: " + COMMERCIAL_CONFIG.bankAlias);
+      const tempInput = document.createElement("input");
+      tempInput.value = COMMERCIAL_CONFIG.bankAlias;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand("copy");
+      document.body.removeChild(tempInput);
+      showToast("Alias copiado: " + COMMERCIAL_CONFIG.bankAlias);
+    }
+
+    // GENERACIÓN Y VALIDACIÓN DE CÓDIGOS ÚNICOS E INTRANSFERIBLES POR CLIENTE
+    function openAdminLicenseModal() {
+      document.getElementById("generated-code-box").classList.add("hidden");
+      document.getElementById("client-ref-input").value = "";
+      openModal("modal-admin-licenses");
+    }
+
+    function generateUniqueClientCode(e) {
+      e.preventDefault();
+      const rawClient = document.getElementById("client-ref-input").value.trim().toUpperCase();
+      if (!rawClient) return;
+      const cleanTag = rawClient.replace(/[^A-Z0-9]/g, "").slice(0, 6) || "CLI";
+      const nonce = Math.random().toString(36).substring(2, 6).toUpperCase();
+      const baseToken = `MP-${cleanTag}-${nonce}`;
+      const checksum = computeSignature(baseToken).slice(0, 5);
+      const uniqueCode = `${baseToken}-${checksum}`;
+
+      document.getElementById("generated-code-value").textContent = uniqueCode;
+      document.getElementById("generated-code-box").classList.remove("hidden");
+
+      const msg = encodeURIComponent(
+        `¡Hola! Gracias por adquirir *MascotaPro PRO* 🐾\n\n` +
+        `Tu código de acceso único e intransferible (válido para 1 dispositivo) es:\n` +
+        `*${uniqueCode}*\n\n` +
+        `Ingresalo en la app para desbloquear mascotas ilimitadas para siempre.`
+      );
+      document.getElementById("send-code-wa-btn").href = `https://wa.me/?text=${msg}`;
+      showToast("Código único generado");
+    }
+
+    function copyGeneratedCode() {
+      const code = document.getElementById("generated-code-value").textContent;
+      const tempInput = document.createElement("input");
+      tempInput.value = code;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand("copy");
+      document.body.removeChild(tempInput);
+      showToast("Código copiado al portapapeles");
+    }
+
+    function isValidUniqueClientCode(code) {
+      // Verifica formato MP-CLIENT-NONCE-CHECKSUM firmado por vos
+      const parts = code.split("-");
+      if (parts.length !== 4 || parts[0] !== "MP") return false;
+      const baseToken = `${parts[0]}-${parts[1]}-${parts[2]}`;
+      const expectedChecksum = computeSignature(baseToken).slice(0, 5);
+      return parts[3] === expectedChecksum;
     }
 
     function verifyAccessCode(e) {
       e.preventDefault();
       const input = document.getElementById("access-code-input").value.trim().toUpperCase();
       const msg = document.getElementById("access-code-msg");
-      if (COMMERCIAL_CONFIG.validCodes.includes(input)) {
+      const usedCodes = JSON.parse(localStorage.getItem("mascotapro_used_codes") || "[]");
+
+      if ((COMMERCIAL_CONFIG.revokedCodes || []).includes(input)) {
+        msg.textContent = "Este código fue anulado. Contactanos por WhatsApp.";
+        msg.className = "text-xs font-bold text-rose-500 block";
+        return;
+      }
+
+      if (input === COMMERCIAL_CONFIG.adminMasterCode) {
         state.isPro = true;
+        state.isAdmin = true;
+        state.boundDeviceSig = CURRENT_DEVICE_SIG;
+        state.activatedCode = input;
         saveState();
-        msg.textContent = "¡Licencia activada con éxito! Ya podés agregar mascotas ilimitadas.";
+        msg.textContent = "¡Modo Administrador PRO activado!";
         msg.className = "text-xs font-bold text-emerald-600 block";
-        setTimeout(() => closeModal("modal-unlock"), 1500);
+        showToast("¡Bienvenido Administrador PRO!");
+        setTimeout(() => closeModal("modal-unlock"), 1200);
+        return;
+      }
+
+      if (usedCodes.includes(input) && state.activatedCode !== input) {
+        msg.textContent = "Este código ya fue utilizado y es intransferible.";
+        msg.className = "text-xs font-bold text-rose-500 block";
+        return;
+      }
+
+      if (isValidUniqueClientCode(input) || COMMERCIAL_CONFIG.validCodes.includes(input)) {
+        state.isPro = true;
+        state.isAdmin = false;
+        state.boundDeviceSig = CURRENT_DEVICE_SIG;
+        state.activatedCode = input;
+        if (!usedCodes.includes(input)) {
+          usedCodes.push(input);
+          localStorage.setItem("mascotapro_used_codes", JSON.stringify(usedCodes));
+        }
+        saveState();
+        msg.textContent = "¡Licencia personal activada y vinculada a este dispositivo!";
+        msg.className = "text-xs font-bold text-emerald-600 block";
+        showToast("¡MascotaPro PRO activado!");
+        setTimeout(() => closeModal("modal-unlock"), 1200);
       } else {
         msg.textContent = "Código inválido. Verificalo o escribinos por WhatsApp.";
         msg.className = "text-xs font-bold text-rose-500 block";
       }
     }
 
-    // RESPALDO JSON
+    // =========================================================================
+    // SISTEMA DE ACTUALIZACIÓN EN VIVO SIN REINSTALAR (PWA + SERVICE WORKER)
+    // =========================================================================
+    let deferredInstallPrompt = null;
+
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+    });
+
+    async function triggerInstallApp() {
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        const { outcome } = await deferredInstallPrompt.userChoice;
+        if (outcome === "accepted") {
+          showToast("¡Instalando MascotaPro en tu celular!");
+        }
+        deferredInstallPrompt = null;
+      } else {
+        showToast("Abrí el menú (⋮) de Chrome y elegí 'Agregar a la pantalla principal'");
+      }
+    }
+
+    function generateAppIconPng(size) {
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+
+      ctx.fillStyle = "#0d9488";
+      ctx.fillRect(0, 0, size, size);
+
+      ctx.fillStyle = "#ffffff";
+      const s = size / 192;
+      ctx.beginPath();
+      ctx.ellipse(96 * s, 118 * s, 32 * s, 26 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      const toes = [
+        { x: 58, y: 82, r: 13 },
+        { x: 82, y: 64, r: 14 },
+        { x: 110, y: 64, r: 14 },
+        { x: 134, y: 82, r: 13 }
+      ];
+      toes.forEach(t => {
+        ctx.beginPath();
+        ctx.arc(t.x * s, t.y * s, t.r * s, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      return canvas.toDataURL("image/png");
+    }
+
+    function setupAutoUpdateEngine() {
+      const icon192 = generateAppIconPng(192);
+      const appleIcon = document.getElementById("apple-touch-icon-link");
+      if (appleIcon) appleIcon.href = icon192;
+
+      if ("serviceWorker" in navigator && window.location.protocol.startsWith("http")) {
+        navigator.serviceWorker.register("./sw.js", { scope: "./" }).catch(() => {});
+      }
+
+      checkLiveUpdates(false);
+    }
+
+    async function checkLiveUpdates(manual = false) {
+      try {
+        if (COMMERCIAL_CONFIG.remoteConfigUrl) {
+          const res = await fetch(COMMERCIAL_CONFIG.remoteConfigUrl + "?t=" + Date.now());
+          if (res.ok) {
+            const remote = await res.json();
+            Object.assign(COMMERCIAL_CONFIG, remote);
+            validateLicenseIntegrity();
+            renderAll();
+          }
+        }
+        const lastSavedVersion = localStorage.getItem("mascotapro_installed_version");
+        if (lastSavedVersion && lastSavedVersion !== APP_VERSION) {
+          const banner = document.getElementById("update-banner");
+          if (banner) banner.classList.remove("hidden");
+        } else {
+          localStorage.setItem("mascotapro_installed_version", APP_VERSION);
+          if (manual) showToast(`App actualizada (v${APP_VERSION})`);
+        }
+      } catch (e) {
+        if (manual) showToast(`Versión v${APP_VERSION} lista (modo offline)`);
+      }
+    }
+
+    function applyLiveUpdate() {
+      localStorage.setItem("mascotapro_installed_version", APP_VERSION);
+      window.location.reload(true);
+    }
+
+    // RESPALDO Y RESTAURACIÓN JSON (CON PROTECCIÓN ANTICOPIA DE DISPOSITIVO)
     function exportBackup() {
-      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+      const payload = {
+        ...state,
+        exportedAt: new Date().toISOString(),
+        deviceSig: CURRENT_DEVICE_SIG
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = `Respaldo-MascotaPro-${new Date().toISOString().split("T")[0]}.json`;
       a.click();
+      URL.revokeObjectURL(url);
+      showToast("Respaldo descargado en tu dispositivo");
     }
 
     function importBackup(e) {
@@ -1197,21 +1629,30 @@
         try {
           const imported = JSON.parse(ev.target.result);
           if (imported && Array.isArray(imported.pets)) {
-            state = imported;
+            // Conserva los datos de mascotas pero mantiene la validación de licencia de este dispositivo
+            state.pets = imported.pets;
+            state.activePetId = imported.activePetId || imported.pets[0]?.id || "pet-1";
+            validateLicenseIntegrity();
             saveState();
-            alert("Respaldo restaurado correctamente.");
+            showToast("Respaldo restaurado correctamente");
+          } else {
+            showToast("El archivo no tiene un formato válido");
           }
         } catch {
-          alert("El archivo de respaldo no es válido.");
+          showToast("Error al leer el archivo de respaldo");
         }
       };
       reader.readAsText(file);
     }
 
-    // INICIALIZACIÓN
-    initTheme();
-    switchTab("perfil");
-    renderAll();
+    // INICIALIZACIÓN SEGURA
+    window.addEventListener("DOMContentLoaded", () => {
+      initTheme();
+      validateLicenseIntegrity();
+      setupAutoUpdateEngine();
+      switchTab("perfil");
+      renderAll();
+    });
   </script>
 </body>
 </html>
