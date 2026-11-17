@@ -1,27 +1,16 @@
 {
-  "name": "MascotaPro – Organizador de Mascotas",
+  "name": "MascotaPro — Salud y Placa QR",
   "short_name": "MascotaPro",
-  "description": "Organizador completo de cuidado de mascotas: vacunas, historial veterinario, gastos, recordatorios y más.",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0f766e",
-  "theme_color": "#0f766e",
-  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#0d9488",
   "icons": [
     {
-      "src": "icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "icons/icon-512.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/1076/1076928.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ],
-  "categories": ["lifestyle", "health", "utilities"],
-  "lang": "es-AR",
-  "dir": "ltr"
+  ]
 }
