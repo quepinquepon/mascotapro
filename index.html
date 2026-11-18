@@ -72,7 +72,7 @@
        CONFIGURACIÓN COMERCIAL Y ACTUALIZACIÓN REMOTA (100% GRATUITA)
        ===================================================================== -->
   <script>
-    const APP_VERSION = "2.3.6"; // Incrementá este número cada vez que subas mejoras a GitHub
+    const APP_VERSION = "2.3.7"; // Incrementá este número cada vez que subas mejoras a GitHub
 
     const COMMERCIAL_CONFIG = {
       appName: "MascotaPro",
@@ -1081,28 +1081,29 @@
 
     function generateQRCode() {
       const container = document.getElementById("qrcode-container");
-      if (!container || typeof QRCode === 'undefined') return;
+      if (!container) return;
       container.innerHTML = "";
-      const pet = getActivePet();
-      const rawText = [
+      const msg = t => `<p class="text-xs text-rose-600 text-center">${t}</p>`;
+      if (typeof QRCode === "undefined") { container.innerHTML = msg("No se pudo cargar el generador de QR. Conectate a internet y recargá la página."); return; }
+      const pet = getActivePet() || {};
+      const lines = (ownerLabel, withZone) => [
         `MASCOTA: ${(pet.name || "").slice(0, 30)}`,
-        `DUEÑO: ${(pet.owner || "").slice(0, 35)}`,
-        `TEL: ${(pet.phone || "").slice(0, 25)}`,
-        `ZONA: ${(pet.address || "-").slice(0, 45)}`
-      ].join("\n");
-
-      try {
-        new QRCode(container, {
-          text: rawText,
-          width: 180,
-          height: 180,
-          colorDark: "#0f172a",
-          colorLight: "#ffffff",
-          correctLevel: QRCode.CorrectLevel.M
-        });
-      } catch (err) {
-        container.innerHTML = `<p class="text-xs text-rose-500">Error generando QR</p>`;
+        `${ownerLabel}: ${(pet.owner || "").slice(0, 35)}`,
+        `TEL: ${(pet.phone || "").slice(0, 25)}`
+      ].concat(withZone ? [`ZONA: ${(pet.address || "-").slice(0, 45)}`] : []).join("\n");
+      const attempts = [
+        [lines("DUEÑO", true), QRCode.CorrectLevel.M],
+        [lines("DUEÑO", true), QRCode.CorrectLevel.L],
+        [lines("DUENO", false), QRCode.CorrectLevel.L]
+      ];
+      for (const [text, level] of attempts) {
+        try {
+          container.innerHTML = "";
+          new QRCode(container, { text, width: 180, height: 180, colorDark: "#0f172a", colorLight: "#ffffff", correctLevel: level });
+          return;
+        } catch (err) { console.error("QR:", err); }
       }
+      container.innerHTML = msg("No se pudo generar el QR. Revisá que el nombre y el teléfono estén completos.");
     }
 
     function downloadQRTag() {
