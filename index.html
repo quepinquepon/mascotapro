@@ -72,7 +72,7 @@
        CONFIGURACIÓN COMERCIAL Y ACTUALIZACIÓN REMOTA (100% GRATUITA)
        ===================================================================== -->
   <script>
-    const APP_VERSION = "2.3.7"; // Incrementá este número cada vez que subas mejoras a GitHub
+    const APP_VERSION = "2.4.0"; // Incrementá este número cada vez que subas mejoras a GitHub
 
     const COMMERCIAL_CONFIG = {
       appName: "MascotaPro",
@@ -1442,7 +1442,7 @@
       const bAlias = document.getElementById("modal-bank-alias");
       if (bAlias) bAlias.textContent = /TU\.ALIAS/.test(COMMERCIAL_CONFIG.bankAlias) ? "Pedilo por WhatsApp" : COMMERCIAL_CONFIG.bankAlias;
       const mpBtn = document.getElementById("modal-mp-btn");
-      if (mpBtn) { mpBtn.href = COMMERCIAL_CONFIG.mpLink; mpBtn.classList.toggle("hidden", /TU_LINK/.test(COMMERCIAL_CONFIG.mpLink)); }
+      if (mpBtn) { mpBtn.onclick = startMpPayment; mpBtn.href = COMMERCIAL_CONFIG.mpLink; mpBtn.classList.toggle("hidden", /TU_LINK/.test(COMMERCIAL_CONFIG.mpLink)); }
       const waText = encodeURIComponent(`¡Hola! Te envío el comprobante de pago para activar ${COMMERCIAL_CONFIG.appName} PRO.`);
       const waBtn = document.getElementById("modal-wa-btn");
       if (waBtn) waBtn.href = `https://wa.me/${COMMERCIAL_CONFIG.whatsappNumber}?text=${waText}`;
@@ -1624,6 +1624,76 @@
       if (e.key === "Escape") ["modal-pet", "modal-vaccine", "modal-visit", "modal-expense", "modal-unlock", "modal-admin-licenses"].forEach(closeModal);
     });
 
+    async function startMpPayment(ev) {
+      if (!COMMERCIAL_CONFIG.supabaseUrl) return;
+      ev.preventDefault();
+      showToast("Abriendo Mercado Pago…");
+      try {
+        const res = await fetch(`${COMMERCIAL_CONFIG.supabaseUrl}/functions/v1/create-payment`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "apikey": COMMERCIAL_CONFIG.supabaseAnonKey },
+          body: "{}"
+        });
+        const d = await res.json();
+        if (!d.url || !d.order) throw new Error("sin url");
+        localStorage.setItem("mascotapro_order", d.order);
+        window.location.href = d.url;
+      } catch {
+        window.open(COMMERCIAL_CONFIG.mpLink, "_blank");
+        showToast("Pagá con el link y avisanos por WhatsApp para recibir tu código.");
+      }
+    }
+
+    async function claimOrder() {
+      if (state.isPro) return true;
+      const order = localStorage.getItem("mascotapro_order");
+      if (!order || !COMMERCIAL_CONFIG.supabaseUrl) return false;
+      try {
+        const k = COMMERCIAL_CONFIG.supabaseAnonKey;
+        const r = await fetch(`${COMMERCIAL_CONFIG.supabaseUrl}/rest/v1/rpc/order_status`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "apikey": k },
+          body: JSON.stringify({ p_order: order })
+        });
+        const d = await r.json();
+        if (d.status === "paid" && d.code) {
+          const v = await callLicense(d.code, false);
+          if (v.ok) {
+            state.isPro = true; state.isAdmin = false;
+            state.boundDeviceSig = CURRENT_DEVICE_SIG; state.activatedCode = d.code;
+            localStorage.removeItem("mascotapro_order");
+            saveState();
+            showToast("¡Pago confirmado! MascotaPro PRO activado 🎉");
+            return true;
+          }
+        } else if (d.status === "none") {
+          localStorage.removeItem("mascotapro_order");
+        }
+      } catch {}
+      return false;
+    }
+
+    async function handlePaymentReturn() {
+      const q = new URLSearchParams(location.search);
+      const pago = q.get("pago"), o = q.get("o");
+      if (o && /^[0-9a-f-]{36}$/i.test(o)) localStorage.setItem("mascotapro_order", o);
+      if (pago) history.replaceState(null, "", location.pathname);
+      if (pago === "ok") {
+        showToast("Confirmando tu pago…");
+        for (let i = 0; i < 12; i++) {
+          if (await claimOrder()) return;
+          await new Promise(r => setTimeout(r, 3000));
+        }
+        showToast("Tu pago se está acreditando. Abrí la app en unos minutos y se activa solo.");
+      } else if (pago === "pendiente") {
+        showToast("Tu pago está pendiente. Apenas se acredite, abrí la app y se activa solo.");
+      } else if (pago === "error") {
+        showToast("El pago no se completó. Podés intentar de nuevo.");
+      } else {
+        claimOrder();
+      }
+    }
+
     window.addEventListener("DOMContentLoaded", () => {
       try {
         initTheme();
@@ -1631,6 +1701,7 @@
         setupAutoUpdateEngine();
         switchTab("perfil");
         renderAll();
+        handlePaymentReturn();
       } catch (err) {
         console.error("Error en arranque:", err);
       }
