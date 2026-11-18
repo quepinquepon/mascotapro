@@ -72,15 +72,15 @@
        CONFIGURACIÓN COMERCIAL Y ACTUALIZACIÓN REMOTA (100% GRATUITA)
        ===================================================================== -->
   <script>
-    const APP_VERSION = "2.3.4"; // Incrementá este número cada vez que subas mejoras a GitHub
+    const APP_VERSION = "2.3.6"; // Incrementá este número cada vez que subas mejoras a GitHub
 
     const COMMERCIAL_CONFIG = {
       appName: "MascotaPro",
       priceText: "$9.999 ARS",
       transferDiscountText: "5% OFF pagando por transferencia ($9.499 ARS)",
-      whatsappNumber: "5493580000000", // Tu WhatsApp con código de país (sin + ni espacios)
-      mpLink: "https://mpago.la/TU_LINK_AQUI", // Tu link de pago de Mercado Pago
-      bankAlias: "TU.ALIAS.MP", // Tu Alias bancario o de billetera virtual
+      whatsappNumber: "5493584831449", // Tu WhatsApp con código de país (sin + ni espacios)
+      mpLink: "https://mpago.la/1yN4wGB", // Tu link de pago de Mercado Pago
+      bankAlias: "quepin.quepon", // Tu Alias bancario o de billetera virtual
       // Opcional: URL gratuita de un archivo JSON en tu GitHub (raw.githubusercontent.com)
       // para cambiar precios, alias o códigos en todas las apps sin tocar el HTML
       remoteConfigUrl: "",
@@ -575,6 +575,11 @@
             <i data-lucide="send" class="w-4 h-4"></i> Enviar Comprobante
           </a>
         </div>
+      </div>
+
+      <div class="flex gap-2.5 p-3 rounded-2xl bg-amber-50 dark:bg-amber-900/20 text-amber-900 dark:text-amber-200 text-xs leading-relaxed">
+        <i data-lucide="clock" class="w-4 h-4 shrink-0 mt-0.5"></i>
+        <p><strong>¿Ya pagaste?</strong> Enviá el comprobante por WhatsApp. Tu código personal te llega apenas confirmemos el pago: a veces al instante y otras en unas horas, según cuándo estemos disponibles. Tu pago queda registrado, así que no hace falta pagar de nuevo ni insistir. Cuando lo recibas, ingresalo abajo.</p>
       </div>
 
       <form onsubmit="verifyAccessCode(event)" class="space-y-3">
