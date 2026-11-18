@@ -72,7 +72,7 @@
        CONFIGURACIÓN COMERCIAL Y ACTUALIZACIÓN REMOTA (100% GRATUITA)
        ===================================================================== -->
   <script>
-    const APP_VERSION = "2.3.2"; // Incrementá este número cada vez que subas mejoras a GitHub
+    const APP_VERSION = "2.3.3"; // Incrementá este número cada vez que subas mejoras a GitHub
 
     const COMMERCIAL_CONFIG = {
       appName: "MascotaPro",
@@ -864,10 +864,10 @@
 
     async function callLicense(code, check) {
       const k = COMMERCIAL_CONFIG.supabaseAnonKey;
-      const res = await fetch(`${COMMERCIAL_CONFIG.supabaseUrl}/functions/v1/redeem-code`, {
+      const res = await fetch(`${COMMERCIAL_CONFIG.supabaseUrl}/rest/v1/rpc/redeem_license`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "apikey": k },
-        body: JSON.stringify({ code, device: CURRENT_DEVICE_SIG, check })
+        body: JSON.stringify({ p_code: code, p_device: CURRENT_DEVICE_SIG, p_check: !!check })
       });
       return res.json();
     }
