@@ -72,7 +72,7 @@
        CONFIGURACIÓN COMERCIAL Y ACTUALIZACIÓN REMOTA (100% GRATUITA)
        ===================================================================== -->
   <script>
-    const APP_VERSION = "2.3.3"; // Incrementá este número cada vez que subas mejoras a GitHub
+    const APP_VERSION = "2.3.4"; // Incrementá este número cada vez que subas mejoras a GitHub
 
     const COMMERCIAL_CONFIG = {
       appName: "MascotaPro",
@@ -787,12 +787,7 @@
         hwId = "DEV-" + Math.random().toString(36).substring(2, 10).toUpperCase() + "-" + Date.now().toString(36).toUpperCase();
         localStorage.setItem("mascotapro_hw_id", hwId);
       }
-      const rawSig = [
-        hwId,
-        navigator.platform || "",
-        screen.width + "x" + screen.height,
-        Intl.DateTimeFormat().resolvedOptions().timeZone || ""
-      ].join("|");
+      const rawSig = hwId;
       return computeSignature(rawSig);
     }
 
